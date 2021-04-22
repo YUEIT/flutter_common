@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar.Fullscreen">
+        <item name="android:windowTranslucentStatus">true</item>
+        <!-- 底部导航栏透明，但整个windowBackground会扩展到导航栏部分 -->
+        <!--<item name="android:windowTranslucentNavigation" tools:ignore="NewApi">true</item>-->
+        <item name="android:windowBackground">@drawable/launch_window_background</item>
+    </style>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+
+        <item name="windowNoTitle">true</item>        
+        <item name="windowActionBar">false</item>
+        <item name="colorPrimary">#ffffff</item>
+        <item name="colorPrimaryDark">#000000</item>        
+        <item name="colorAccent">#000000</item>
+    </style>
+</resources>

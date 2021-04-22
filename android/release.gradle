@@ -1,0 +1,133 @@
+//这里将一些打包编译，以及一些task独立出来
+apply plugin: 'com.android.application'
+apply plugin: 'walle'
+
+//版本号和debug在version.properties文件中配置
+def versionPropsFile = file("../version.properties")
+Properties versionProps = new Properties()
+versionProps.load(new FileInputStream(versionPropsFile))
+
+android {
+    buildToolsVersion rootProject.ext.android.buildToolsVersion
+    defaultConfig {
+        versionCode appVersionCode(versionProps['version_name'].toString())
+        versionName versionProps['version_name'].toString()
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [moduleName: project.getName()]
+            }
+        }
+    }
+    dataBinding {
+        enabled true
+    }
+    signingConfigs {
+        release {
+//            storeFile file("../yue.keystore")
+//            storePassword ''
+//            keyAlias ''
+//            keyPassword ''
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    buildTypes {
+        def umeng_key_debug = ""
+        def umeng_key_release = ""
+
+        release {
+//            ndk {
+//                abiFilters "armeabi-v7a"
+//                abiFilters "x86"
+//            }
+            shrinkResources false
+            minifyEnabled false
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+            manifestPlaceholders = [UMENG_APPKEY_VALUE: umeng_key_release]
+            buildConfigField("boolean", "DEBUG_MODE", "false")
+            buildConfigField("boolean", "LOG_MODE", "false")
+            buildConfigField("boolean", "FLUTTER_ENABLE", "true")
+        }
+
+        debug {
+            shrinkResources false
+            minifyEnabled false
+//            zipAlignEnabled true
+            // 移除无用的resource文件
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+            manifestPlaceholders = [UMENG_APPKEY_VALUE: umeng_key_debug]
+            buildConfigField("boolean", "DEBUG_MODE", versionProps['debug_mode'].toString())
+            buildConfigField("boolean", "LOG_MODE", versionProps['log_mode'].toString())
+            buildConfigField("boolean", "FLUTTER_ENABLE", rootProject.ext.flutter["enable"].toString())
+        }
+    }
+
+    walle {
+        // 指定渠道包的输出路径
+        apkOutputFolder = new File("${project.buildDir}/outputs/channels");
+        // 定制渠道包的APK的文件名称
+        apkFileNameFormat = '${projectName}-${channel}-${buildType}-v${versionName}-${versionCode}.apk';
+        // 渠道配置文件
+        channelFile = new File("${rootProject.getRootDir()}/channel")
+    }
+}
+
+//1.0.0 = 10000; 1.1.0 = 10100 分割"."，每项固定显示长度为2
+def appVersionCode(String appVersionName) {
+    String[] arrayString = appVersionName.split("\\.")
+    if (arrayString.length != 3) {
+        throw new GradleException("version length error")
+    }
+    StringBuilder stringBuilder = new StringBuilder()
+    for (String s : arrayString) {
+        if (s.length() == 1) {
+            stringBuilder.append("0" + s)
+        } else if (s.length() == 2) {
+            stringBuilder.append(s)
+        } else {
+            throw new GradleException("version name error")
+        }
+    }
+    return stringBuilder.toInteger()
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+    google()
+}
+
+//之前用的是这项命令，直接移过来，实际没什么作用
+task classOver {
+    doLast {
+        println "assemble release success"
+    }
+}
+
+afterEvaluate {
+    //执行顺序 assembleReleaseChannels -> classOver
+    classOver.dependsOn tasks.getByName("assembleReleaseChannels")
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation rootProject.ext.dependencies["walle-payload_reader"]
+    implementation rootProject.ext.dependencies["walle-payload_writer"]
+}
+
+//task forEachAllFragment << {
+//    fileTree("${project.getProjectDir()}/src/main/java").filter {
+//        it.name.endsWith('Fragment.java')
+//    } each {
+//        file -> println file.name
+//    }
+//}

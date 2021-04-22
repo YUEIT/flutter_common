@@ -1,0 +1,5 @@
+apply from:'../mvn_publish.gradle'
+
+artifacts {
+    archives(file('sqflite.aar'))
+}

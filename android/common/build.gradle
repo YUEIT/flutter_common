@@ -1,0 +1,67 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion rootProject.ext.android.targetSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.android.minSdkVersion
+        targetSdkVersion rootProject.ext.android.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+//        javaCompileOptions {
+//            annotationProcessorOptions {
+//                arguments = [ AROUTER_MODULE_NAME  : project.getName() ]
+//            }
+//        }
+        kapt {
+            arguments {
+                arg("AROUTER_MODULE_NAME", project.getName())
+            }
+            generateStubs = true
+        }
+    }
+    dataBinding {
+        enabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation rootProject.ext.androidx["junit"]
+    androidTestImplementation rootProject.ext.androidx["junit-test"]
+    androidTestImplementation rootProject.ext.androidx["espresso-test"]
+
+    api rootProject.ext.androidx["appcompat"]
+    api rootProject.ext.androidx["gridlayout"]
+    api rootProject.ext.androidx["recyclerview"]
+    api rootProject.ext.androidx["cardview"]
+    api rootProject.ext.androidx["design"]
+    api rootProject.ext.androidx["legacy"]
+
+    api rootProject.ext.kotlin["stdlib"]
+    api rootProject.ext.kotlin["coroutine"]
+    api rootProject.ext.kotlin["coroutine-android"]
+    implementation rootProject.ext.dependencies["systembartint"]
+    implementation rootProject.ext.dependencies["glide"]
+    api rootProject.ext.dependencies["gson"]
+    //aRouter
+    api rootProject.ext.dependencies["arouter-api"]
+    kapt rootProject.ext.dependencies["arouter-compiler"]
+    //Rx
+    api rootProject.ext.dependencies["rxjava"]
+    api rootProject.ext.dependencies["rxandroid"]
+    api rootProject.ext.dependencies["rxlifecycle"]
+}

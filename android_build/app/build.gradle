@@ -1,0 +1,109 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 29
+        multiDexEnabled true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    dataBinding {
+        enabled true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+}
+
+dependencies {
+    api fileTree(dir: 'libs', include: ['*'])
+}
+
+//def releasePath = "productRelease"
+def releasePath = "release"
+def buildVersion = "1.0.0"
+def localPropsFile = file("../../local.properties")
+if (localPropsFile.exists()) {
+    Properties localProps = new Properties()
+    localProps.load(new FileInputStream(localPropsFile))
+    releasePath = localProps['flutter.build'].toString()
+    buildVersion = localProps['flutter.version'].toString()
+}
+
+/**
+ * copy flutter 编译产物到 assets目录下
+ */
+task copyBuildFlutterFile {
+    doLast {
+        print("copy from flutter .so flie into libs dir")
+        delete('libs')
+        copy {
+            from('../../build/app/intermediates/merged_native_libs/' + releasePath + '/out/lib')
+            .include('arm64-v8a/libapp.so',
+                    'arm64-v8a/libflutter.so',
+                    'armeabi-v7a/libapp.so',
+                    'armeabi-v7a/libflutter.so'
+            )
+            .into('libs')
+        }
+        print("copy from flutter file into assets dir")
+        delete('src/main/assets')
+        copy {
+            from('../../build/app/intermediates/flutter/' + releasePath)
+                    .into('src/main/assets')
+        }
+    }
+}
+
+/**
+ * copy flutter生成的aar 到/android/module_flutter/libs目录下
+ */
+task copyBuildAarFile {
+    doLast {
+        copy {
+            from('build/outputs/aar')
+                    .into('../../build/flutter_aar')
+        }
+        def file = file("../../build/flutter_aar/app-release.aar")
+        file.renameTo('../build/flutter_aar/yue-flutter-'+ buildVersion +'-release.aar')
+        if (releasePath == "productRelease") {
+            copy {
+                from('../../build/flutter_aar')
+                        .into('../../android/module_flutter/libs')
+            }
+            print("copy from flutter aar into android/module_flutter/libs dir")
+        } else {
+            print("copy from flutter aar into build/flutter_aar dir")
+        }
+    }
+}
+
+/**
+ * 没什么用，统一打包
+ */
+task buildFlutter {
+    doLast {
+        print("build flutter successful！")
+    }
+}
+
+afterEvaluate {
+    tasks.getByName("bundleReleaseAar").dependsOn copyBuildFlutterFile
+    copyBuildAarFile.dependsOn tasks.getByName("bundleReleaseAar")
+    buildFlutter.dependsOn copyBuildAarFile
+}
+// build/app/intermediates/flutter/release
+// build/app/intermediates/merged_native_libs/release/out/lib

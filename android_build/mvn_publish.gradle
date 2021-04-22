@@ -1,0 +1,31 @@
+apply plugin: 'maven'
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories {
+        mavenDeployer {
+            repository(url: maven_local_release_url) {
+                authentication(userName: maven_local_username, password: maven_local_password)
+            }
+            snapshotRepository(url: maven_local_url) {
+                authentication(userName: maven_local_username, password: maven_local_password)
+            }
+            pom.project {
+                version maven_pom_version
+                artifactId maven_pom_artifactId
+                groupId maven_pom_groupid
+                packaging maven_pom_packaging
+                description maven_pom_description
+            }
+            pom.whenConfigured{pom->
+                pom.dependencies.findAll { dep ->
+                    if (dep.getVersion() == "unspecified") {
+                        println("--modify the dependenies module in pom.xml--->>" + dep.getArtifactId())
+                        dep.setGroupId(maven_pom_groupid)
+                        dep.setVersion(maven_pom_version)
+                    }
+                }
+            }
+        }
+    }
+}

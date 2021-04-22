@@ -1,0 +1,44 @@
+apply plugin: 'com.android.library'
+apply from:'../mvn_publish.gradle'
+
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 29
+        multiDexEnabled true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+}
+
+//版本号在flutter sdk的/bin/internal/engine.version路径下获取
+def engineVersion = "b5e15d055d135c5b82feb3263f47f9f9a038343e"
+
+def localProperties = new Properties()
+def localPropertiesFile = file('../../android/local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterRoot = localProperties.getProperty('flutter.sdk')
+if (flutterRoot != null) {
+    def engine = file(flutterRoot + "/bin/internal/engine.version")
+    def version = ""
+    engine.readLines().forEach({
+        version += it
+    })
+    if (version != null) {
+        engineVersion = version
+    }
+}
+
+dependencies {
+    api fileTree(dir: 'libs', include: ['*'])
+    api 'com.google.guava:guava:28.1-android'
+    api "io.flutter:flutter_embedding_release:1.0.0-$engineVersion"
+    api "cn.yue.flutter:flutter_boost:1.0.0@aar"
+    api "cn.yue.flutter:path_provider:1.0.0@aar"
+    api "cn.yue.flutter:sqflite:1.0.0@aar"
+}
