@@ -8,7 +8,6 @@ import 'package:flutter_common/common/components/vm/live_data.dart';
 import 'package:flutter_common/common/net/http.dart';
 import 'package:flutter_common/common/net/http_call_back.dart';
 import 'package:flutter_common/common/plugins/toast_plugin.dart';
-import 'package:flutter_common/common/utils/object_extension.dart';
 
 /// 分页provider 相当于VM层
 /// 持有页面状态PageState与数据data
@@ -84,10 +83,7 @@ abstract class PageViewModel<P extends PageMode<T>, T> extends BaseViewModel {
       _isFirstLoad = false;
     }
     _isEnd = p.isEnd();
-    p.getPageNo()?.let((it){
-      currentPage = it;
-      showPage = it;
-    });
+    optionShowPage(p.getPageNo() ?? currentPage);
     List<T> dataModel = p.getDataList();
     dataListLiveData.addAll(dataModel);
   }
@@ -121,8 +117,8 @@ abstract class PageViewModel<P extends PageMode<T>, T> extends BaseViewModel {
 
   Future<void> loadMore({ScrollNotification? notification}) async{
     if (canLoadMore(notification: notification)) {
-      currentPage = showPage;
-      loadData();
+      currentPage = showPage + 1;
+      await loadData();
     }
   }
 
@@ -137,7 +133,7 @@ abstract class PageViewModel<P extends PageMode<T>, T> extends BaseViewModel {
         && !_isLoading;
   }
 
-  void optionNextPage(int page) {
+  void optionShowPage(int page) {
     currentPage = page;
     showPage = page;
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_common/common/constant/api.dart';
@@ -5,8 +7,9 @@ import 'package:flutter_common/common/constant/debug.dart';
 import 'package:flutter_common/common/net/base_data.dart';
 import 'package:flutter_common/common/plugins/net_connet_plugin.dart';
 import 'package:flutter_common/common/plugins/log_plugin.dart';
+import 'package:flutter_common/common/net/net_client.dart';
 
-var defaultDio = Dio();
+List<INetClient> clients = [NetClient.instance()];
 
 typedef RequestStartCallback = dynamic Function();
 typedef RequestFailureCallback = dynamic Function(ResultError e);
@@ -15,83 +18,39 @@ typedef RequestEndCallback = dynamic Function();
 
 class NetUtils {
   static void init() {
-    Api.initBaseUrl().timeout(Duration(seconds: 10)).then((value) {
-      defaultDio.options.baseUrl = value;
-    }, onError: (Object error, StackTrace stackTrace) {
-      defaultDio.options.baseUrl = Api.BASE_URL;
+    clients.forEach((element) {
+      Dio dio = element.dio;
+      element.baseUrl().timeout(Duration(seconds: 10)).then((value) {
+        dio.options.baseUrl = value;
+      }, onError: (Object error, StackTrace stackTrace) {
+        dio.options.baseUrl = Api.BASE_URL;
+      });
+      dio.interceptors.addAll(element.interceptors());
+      dio.transformer = element.transformer();
     });
-    defaultDio.interceptors.add(NoNetInterceptor());
-    defaultDio.interceptors.add(ParamsInterceptor());
-    defaultDio.transformer = ParamsTransformer();
     //代理设置
     openProxy();
   }
 
   static void openProxy() {
     if (Debug.debugProxy()) {
-      (defaultDio.httpClientAdapter as DefaultHttpClientAdapter)
-          .onHttpClientCreate = (client) {
-        // config the http client
-        client.findProxy = (uri) {
-          //proxy all request to localhost:8888
-          // return 'PROXY 192.168.10.104:8888';
-          return "PROXY " + Debug.proxyClient() + ":" +  Debug.proxyClientCode();
+      clients.forEach((element) {
+        (element.dio.httpClientAdapter as DefaultHttpClientAdapter)
+            .onHttpClientCreate = (client) {
+          // config the http client
+          client.findProxy = (uri) {
+            //proxy all request to localhost:8888
+            // return 'PROXY 192.168.10.104:8888';
+            return "PROXY " + Debug.proxyClient() + ":" +
+                Debug.proxyClientCode();
+          };
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
+          // you can also create a HttpClient to dio
+          // return HttpClient();
         };
-        // you can also create a HttpClient to dio
-        // return HttpClient();
-      };
+      });
     }
-  }
-
-  static void request(
-    Method method,
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    dynamic data,
-    ProgressCallback? onReceiveProgress,
-    HttpCallBack? httpCallBack,
-    Response? returnResponse,
-    Dio? dio,
-  }) async {
-    try {
-      if (dio == null) {
-        dio = defaultDio;
-      }
-      httpCallBack?.onStart();
-      Response? response;
-      if (method == Method.GET) {
-        response = await dio.get(path,
-            queryParameters: queryParameters,
-            onReceiveProgress: onReceiveProgress);
-      } else if (method == Method.POST) {
-        response = await dio.post(path,
-            data: data,
-            queryParameters: queryParameters,
-            onReceiveProgress: onReceiveProgress);
-      } else if (method == Method.LOCAL) {
-        response = await Future.sync(() {
-          return returnResponse;
-        });
-      }
-      if (response == null || response.data == null) {
-        httpCallBack?.onFailure(ResultError(
-            requestOptions:
-                response?.requestOptions ?? RequestOptions(path: path),
-            resultType: ResultErrorType.NO_DATA,
-            error: "没有数据"));
-      } else {
-        httpCallBack?.onSuccess(response.data);
-      }
-    } on DioError catch (e) {
-      ResultError resultError;
-      if (e is ResultError) {
-        resultError = e;
-      } else {
-        resultError = ResultError.copy(e);
-      }
-      httpCallBack?.onFailure(resultError);
-    }
-    httpCallBack?.onEnd();
   }
 }
 
@@ -297,16 +256,14 @@ class ResultError extends DioError {
     switch (resultType) {
       case ResultErrorType.ERROR_SERVER:
         return 1000;
-      case ResultErrorType.TOKEN_INVALID:
-        return 2000;
       case ResultErrorType.NO_DATA:
-        return 3000;
+        return 2000;
       case ResultErrorType.NO_NET:
+        return 3000;
+      case ResultErrorType.TIME_OUT:
         return 4000;
       case ResultErrorType.OPERATION:
         return 5000;
-      case ResultErrorType.TIME_OUT:
-        return 6000;
       case ResultErrorType.UN_KNOW:
         return -1;
       default:
@@ -320,15 +277,13 @@ class ResultError extends DioError {
         case 1000:
           return ResultErrorType.ERROR_SERVER;
         case 2000:
-          return ResultErrorType.TOKEN_INVALID;
-        case 3000:
           return ResultErrorType.NO_DATA;
-        case 4000:
+        case 3000:
           return ResultErrorType.NO_NET;
+        case 4000:
+          return ResultErrorType.TIME_OUT;
         case 5000:
           return ResultErrorType.OPERATION;
-        case 6000:
-          return ResultErrorType.TIME_OUT;
         default:
           return ResultErrorType.ERROR_SERVER;
       }
@@ -339,10 +294,10 @@ class ResultError extends DioError {
 
 enum ResultErrorType {
   ERROR_SERVER,
-  TOKEN_INVALID,
   NO_DATA,
   NO_NET,
   OPERATION,
   UN_KNOW,
-  TIME_OUT
+  TIME_OUT,
+  TOKEN_INVALID,
 }

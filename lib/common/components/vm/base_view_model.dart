@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_common/common/components/lifecycle_state.dart';
 import 'package:flutter_common/common/components/vm/live_data.dart';
-
-import 'data/event_mode.dart';
+import 'package:flutter_common/common/components/vm/data/event_mode.dart';
 
 abstract class BaseViewModel implements BindLifecycleObserver<LifecycleEvent> {
 

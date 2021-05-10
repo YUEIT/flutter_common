@@ -4,6 +4,7 @@ import 'package:flutter_common/common/components/vm/live_data.dart';
 import 'package:flutter_common/common/components/vm/pull_view_model.dart';
 import 'package:flutter_common/common/constant/api.dart';
 import 'package:flutter_common/common/net/http.dart';
+import 'package:flutter_common/common/net/net_client.dart';
 import 'package:flutter_common/example/base/example_api.dart';
 import 'package:flutter_common/example/mode/pull_list_mode.dart';
 
@@ -13,7 +14,7 @@ class PullListViewModel extends PullViewModel {
 
   @override
   Future<void> loadData() async {
-    NetUtils.request(Method.GET, ExampleApi.USER,
+    NetClient.instance().request(Method.GET, ExampleApi.USER,
       httpCallBack: getHttpCallBack(
         onSuccess: (response){
           List<PullListMode> list = parseResponse(response);

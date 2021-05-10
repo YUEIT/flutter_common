@@ -78,7 +78,13 @@ class _MyAppState extends State<MyApp> {
       builders[key] = (settings, uniqueId) {
         return PageRouteBuilder<dynamic>(
             settings: settings,
-            pageBuilder: (_, __, ___) => AppRoute.getPage(key, settings.arguments, uniqueId));
+            pageBuilder: (_, __, ___) {
+              return TransitionBuilderWidget(
+                builder: (context) {
+                  return AppRoute.getPage(key, settings.arguments, uniqueId);
+                },
+              );
+            });
       };
     });
 
@@ -130,7 +136,6 @@ class HomeWidget extends StatelessWidget {
       maxWidth: MediaQuery.of(context).size.width,
       maxHeight: MediaQuery.of(context).size.height,),
       designSize: Size(DimensExtension.screenWidth, DimensExtension.screenHeight),
-      allowFontScaling: false,
     );
     return Container(
       child: child,
@@ -138,3 +143,50 @@ class HomeWidget extends StatelessWidget {
   }
 
 }
+
+typedef TransitionBuilder = Widget Function(BuildContext context);
+
+class TransitionBuilderWidget extends StatefulWidget {
+  final TransitionBuilder builder;
+
+  /// add didChangeMetricsCallBack
+  const TransitionBuilderWidget({required this.builder});
+
+  @override
+  _TransitionBuilderWidgetState createState() {
+    return _TransitionBuilderWidgetState();
+  }
+}
+
+class _TransitionBuilderWidgetState extends State<TransitionBuilderWidget>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addObserver(this);
+  }
+
+  ///应用尺寸改变时回调，例如旋转
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    var oldScreenWidth = ScreenUtil().screenWidth;
+    WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+      if (oldScreenWidth != MediaQuery.of(context).size.width) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance?.removeObserver(this);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context);
+  }
+}
+

@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_common/common/components/lifecycle_state.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LiveData<T> {

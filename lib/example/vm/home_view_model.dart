@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_common/common/components/lifecycle_state.dart';
+import 'package:flutter_common/common/net/net_client.dart';
 import 'package:flutter_common/example/mode/home_mode.dart';
 import 'package:flutter_common/common/net/http.dart';
 import '../../common/components/vm/simple_pull_view_model.dart';
@@ -10,7 +11,7 @@ class HomeViewModel extends SimplePullViewModel<HomeMode>{
 
   @override
   Future<void> loadData() async{
-    NetUtils.request(Method.LOCAL, "",
+    NetClient.instance().request(Method.LOCAL, "",
         httpCallBack: getHttpCallBack(
           onSuccess: (response) {
             var result = parseResponse(response);

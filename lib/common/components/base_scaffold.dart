@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_common/common/components/provider/dialog_provider.dart';
-import 'package:provider/provider.dart';
 
 /// 覆盖Scaffold，并提供WillPopScope拦截处理
 class BaseScaffold extends StatefulWidget {
@@ -32,7 +31,8 @@ class BaseScaffold extends StatefulWidget {
     this.drawerEnableOpenDragGesture = true,
     this.endDrawerEnableOpenDragGesture = true,
     this.restorationId,
-    this.onWillPop
+    this.onWillPop,
+    this.dealWithGlobalDialog = false,
   }):super(key: key);
 
   final bool extendBody;
@@ -83,6 +83,8 @@ class BaseScaffold extends StatefulWidget {
 
   final WillPopCallback? onWillPop;
 
+  final bool dealWithGlobalDialog;
+
   @override
   State<StatefulWidget> createState() {
     return _BaseScaffoldState();
@@ -122,10 +124,12 @@ class _BaseScaffoldState extends State<BaseScaffold> {
   }
 
   Future<bool> dealWillPop() async {
-    final provider = DialogProvider.requestProvider(context);
-    if (provider.isDialogShowing()) {
-      provider.willRemoveLast();
-      return false;
+    if (widget.dealWithGlobalDialog) {
+      final provider = DialogProvider.requestProvider(context);
+      if (provider.isDialogShowing()) {
+        provider.willRemoveLast();
+        return false;
+      }
     }
     if (widget.onWillPop != null) {
       return await widget.onWillPop!();
@@ -136,6 +140,8 @@ class _BaseScaffoldState extends State<BaseScaffold> {
   @override
   void dispose() {
     super.dispose();
-    DialogProvider.provider()?.willRemoveAll();
+    if (widget.dealWithGlobalDialog) {
+      DialogProvider.provider()?.willRemoveAll();
+    }
   }
 }

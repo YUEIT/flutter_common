@@ -3,10 +3,7 @@ import 'package:flutter_common/common/components/vm/live_data.dart';
 import 'package:flutter_common/common/net/http.dart';
 import 'package:flutter_common/common/net/http_call_back.dart';
 import 'package:flutter_common/common/plugins/toast_plugin.dart';
-
-import '../lifecycle_state.dart';
-import '../scaffold_widget.dart';
-import 'base_view_model.dart';
+import 'package:flutter_common/common/components/vm/base_view_model.dart';
 
 abstract class SimplePullViewModel<T> extends BaseViewModel {
 

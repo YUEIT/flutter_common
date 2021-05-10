@@ -40,16 +40,16 @@ class RefreshWidget extends StatelessWidget {
   }
 
   Widget _customFooter(BuildContext context,
-    LoadMode loadState,
-    double pulledExtent,
-    double loadTriggerPullDistance,
-    double loadIndicatorExtent,
-    AxisDirection axisDirection,
-    bool float,
-    Duration completeDuration,
-    bool enableInfiniteLoad,
-    bool success,
-    bool end) {
+      LoadMode loadState,
+      double pulledExtent,
+      double loadTriggerPullDistance,
+      double loadIndicatorExtent,
+      AxisDirection axisDirection,
+      bool float,
+      Duration? completeDuration,
+      bool enableInfiniteLoad,
+      bool success,
+      bool end) {
       String showText = "";
         if (loadState == LoadMode.drag) {
           showText = "上拉加载~";
@@ -67,15 +67,6 @@ class RefreshWidget extends StatelessWidget {
           child: Text(showText),
         );
     }
-
-//    return RefreshIndicator(
-//      child: child,
-//      onRefresh: () async{
-//        await onRefresh();
-//      }
-//    );
-
-
 }
 
 const Duration _kIndicatorScaleDuration = Duration(milliseconds: 200);
@@ -110,7 +101,7 @@ class MaterialHeader extends Header {
   Widget contentBuilder(BuildContext context, RefreshMode refreshState,
       double pulledExtent, double refreshTriggerPullDistance,
       double refreshIndicatorExtent, AxisDirection axisDirection,
-      bool float, Duration completeDuration, bool enableInfiniteRefresh,
+      bool float, Duration? completeDuration, bool enableInfiniteRefresh,
       bool success, bool noMore) {
     linkNotifier.contentBuilder(context, refreshState, pulledExtent,
         refreshTriggerPullDistance, refreshIndicatorExtent, axisDirection,

@@ -12,15 +12,7 @@ class CommonDialog extends StatelessWidget {
         this.leftClick,
         this.rightStr,
         this.rightClick,
-        int? globalKey
-      }) {
-    if (globalKey != null) {
-      final provider = DialogProvider.requestProvider(dialogContext);
-      provider.addCloseListener(CloseListener(globalKey, () {
-        dismiss();
-      }));
-    }
-  }
+      });
 
   final BuildContext dialogContext;
   final String? title;
@@ -148,34 +140,4 @@ class CommonDialog extends StatelessWidget {
       print("$e");
     }
   }
-}
-
-typedef GlobalWidgetBuilder = Widget Function(BuildContext context, int globalKey);
-
-Future<T?> showGlobalDialog<T>({
-  required BuildContext context,
-  required GlobalWidgetBuilder builder,
-  bool barrierDismissible = true,
-  Color? barrierColor = Colors.black54,
-  String? barrierLabel,
-  bool useSafeArea = true,
-  bool useRootNavigator = true,
-  RouteSettings? routeSettings,
-}) async {
-  final provider = DialogProvider.requestProvider(context);
-  var currentKey = provider.nextGlobalKey();
-  provider.addShowKey(currentKey);
-  var value = await showDialog<T>(
-      context: context,
-      builder: (dialogContext) {
-        return builder(dialogContext, currentKey);
-      },
-      barrierDismissible: barrierDismissible,
-      barrierLabel: barrierLabel,
-      useSafeArea: useSafeArea,
-      useRootNavigator: useRootNavigator,
-      routeSettings: routeSettings
-  );
-  provider.removeShowKey(currentKey);
-  return value;
 }

@@ -40,11 +40,12 @@ class LoadingHttpCallBack extends LifecycleHttpCallBack {
   LoadingDialog? loadingDialog;
 
   Future<void> _showLoadingDialog() async {
-    await showGlobalDialog(
+    await showDialog(
         context: context,
         barrierDismissible: true,
-        builder: (BuildContext context, int globalKey) {
-          return loadingDialog = LoadingDialog(context, globalKey: globalKey);
+        useRootNavigator: false,
+        builder: (BuildContext context) {
+          return loadingDialog = LoadingDialog(context);
         });
   }
 

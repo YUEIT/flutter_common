@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_common/common/components/base_scaffold.dart';
 import 'package:flutter_common/common/components/lifecycle_state.dart';
+import 'package:flutter_common/common/components/provider/dialog_provider.dart';
 import 'package:flutter_common/common/components/top_banner.dart';
 import 'package:flutter_common/common/components/vm/live_data.dart';
 import 'package:flutter_common/common/router/route.dart';
 import 'package:flutter_common/common/widget/common_dialog.dart';
+import 'package:flutter_common/common/widget/global_dialog.dart';
 import 'package:flutter_common/example/base/example_router_path.dart';
 import 'package:flutter_common/example/vm/option_view_model.dart';
 
@@ -62,29 +64,35 @@ class _OptionPage extends ViewModelState<OptionPage, OptionViewModel> {
         ),
       ),
       onWillPop: () {
-        return _showDialog();
+        return _showGlobalDialog();
       },
     );
   }
 
-  Future<bool> _showDialog() async {
+  Future<bool> _showGlobalDialog() async {
     return await showGlobalDialog(
         context: context,
-        builder: (BuildContext dialogContext, int globalKey) {
-          return CommonDialog(
-            dialogContext,
-            globalKey: globalKey,
-            title: "确认退出当前页面",
-            leftStr: "取消",
-            leftClick: () {
-              Navigator.of(dialogContext).pop(false);
-            },
-            rightStr: "退出",
-            rightClick: () {
-              Navigator.of(dialogContext).pop(true);
-            },
+        builder: (dialogContext, globalKey) {
+          return GlobalDialog(
+              dialogContext,
+              globalKey: globalKey,
+              builder: (dialogContext) {
+                return CommonDialog(
+                  dialogContext,
+                  title: "确认退出当前页面",
+                  leftStr: "取消",
+                  leftClick: () {
+                    Navigator.of(dialogContext).pop(false);
+                  },
+                  rightStr: "退出",
+                  rightClick: () {
+                    Navigator.of(dialogContext).pop(true);
+                  },
+                );
+              }
           );
-        });
+        }
+    );
   }
 }
 

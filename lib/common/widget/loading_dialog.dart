@@ -11,15 +11,7 @@ class LoadingDialog extends StatelessWidget {
   final String message;
   LoadingDialog(this.dialogContext, {
     this.message = "loading...",
-    int? globalKey
-  }) {
-    if (globalKey != null) {
-      final provider = DialogProvider.requestProvider(dialogContext);
-      provider.addCloseListener(CloseListener(globalKey, () {
-        dismiss();
-      }));
-    }
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
