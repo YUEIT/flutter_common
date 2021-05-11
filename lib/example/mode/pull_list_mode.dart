@@ -1,3 +1,5 @@
+import 'package:flutter_common/common/utils/map_extension.dart';
+
 class PullListMode {
 
   int? id;
@@ -10,10 +12,10 @@ class PullListMode {
 
   factory PullListMode.fromJson(Map<String, dynamic> json) {
     return PullListMode(
-      id: json['id'],
-      name: json['name'],
-      phone: json['phone'],
-      address: json['address']
+      id: json.get('id'),
+      name: json.get('name'),
+      phone: json.get('phone'),
+      address: json.get('address')
     );
   }
 

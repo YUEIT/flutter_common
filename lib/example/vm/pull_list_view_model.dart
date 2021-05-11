@@ -1,5 +1,3 @@
-
-
 import 'package:flutter_common/common/components/vm/live_data.dart';
 import 'package:flutter_common/common/components/vm/pull_view_model.dart';
 import 'package:flutter_common/common/constant/api.dart';
@@ -25,12 +23,12 @@ class PullListViewModel extends PullViewModel {
   }
 
   void addUser() {
-    data.add(PullListMode(
-      id: 3,
-      name: "xixixi",
-      phone: "10000",
-      address: "jjjjjj"
-    ));
+    // data.add(PullListMode(
+    //   id: 3,
+    //   name: "xixixi",
+    //   phone: "10000",
+    //   address: "jjjjjj"
+    // ));
   }
 
   List<PullListMode> parseResponse(response) {

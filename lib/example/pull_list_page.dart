@@ -164,10 +164,9 @@ class ItemWidget2 extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Container(
-            child: Image.asset(
-              "images/ic_coupons_left.png",
-              width: 50,
-              height: 50,
+            child: Icon(
+              Icons.title,
+              size: 50,
             ),
             margin: EdgeInsets.all(10),
           ),

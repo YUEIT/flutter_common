@@ -47,14 +47,21 @@ class FlutterPage extends StatelessWidget {
                 //导航到新路由
                 PlatformNavigator.instance.open(ExampleRouterPath.NET_PAGE, withContainer: true);
               },
-              child: Text("net Page"),
+              child: Text("net page"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                //导航到新路由
+                PlatformNavigator.instance.open(ExampleRouterPath.PULL_LIST_PAGE, withContainer: true);
+              },
+              child: Text("pull list page"),
             ),
             ElevatedButton(
               onPressed: () {
                 //导航到新路由
                 PlatformNavigator.instance.open(ExampleRouterPath.MAIN_PAGE, withContainer: true);
               },
-              child: Text("home Page"),
+              child: Text("home page"),
             ),
             ElevatedButton(
               onPressed: () {

@@ -1,0 +1,23 @@
+## Read about `build.yaml` at https://pub.dartlang.org/packages/build_config
+#targets:
+#  $default:
+#    builders:
+#      ypc_flutter|route_write_builder:
+#        enabled: true
+#      ypc_flutter|route_builder:
+
+builders:
+  route_write_builder:
+      import: 'package:flutter_common/builder.dart'
+      builder_factories: ['routeWriteBuilder']
+      build_extensions: { '.route.dart': ['.internal.dart'] }
+      auto_apply: root_package
+      build_to: source
+
+  route_builder:
+    import: 'package:flutter_common/builder.dart'
+    builder_factories: ['routeBuilder']
+    build_extensions: { '.dart': ['.internal_invalid.dart'] }
+    auto_apply: root_package
+    runs_before: ['flutter_common|route_write_builder']
+    build_to: source
