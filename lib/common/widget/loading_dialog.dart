@@ -2,8 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_common/common/components/provider/dialog_provider.dart';
-import 'package:flutter_common/common/utils/hexc_olor.dart';
+import 'package:flutter_common/common/utils/hex_color.dart';
 
 class LoadingDialog extends StatelessWidget {
 

@@ -1,16 +1,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_boost/page_visibility.dart';
 import 'package:flutter_common/common/components/system_ui_chrome.dart';
 import 'package:flutter_common/common/components/vm/base_view_model.dart';
 import 'package:flutter_common/common/router/navigation/platform_navigator.dart';
-import 'package:flutter_common/common/widget/common_dialog.dart';
 import 'package:flutter_common/common/widget/loading_dialog.dart';
-import '../constant/debug.dart';
-import '../plugins/log_plugin.dart';
+import 'package:flutter_common/common/constant/debug.dart';
+import 'package:flutter_common/common/plugins/log_plugin.dart';
+import 'package:flutter_common/common/utils/object_extension.dart';
 
 /// 生命周期注册
-abstract class LifecycleState<T extends StatefulWidget> extends State<T> {
+abstract class LifecycleState<T extends StatefulWidget> extends State<T> with PageVisibilityObserver {
 
   static const TAG = "LifecycleState";
 
@@ -21,12 +22,6 @@ abstract class LifecycleState<T extends StatefulWidget> extends State<T> {
     super.initState();
     initStatusBar();
     initSubscribe();
-    lifecycleProvider.onPageCreate();
-    if (Debug.debugDetail()) {
-      LogPlugin.logInfo(tag: TAG,
-          msg: "------------------initState(" + this.toString() +
-              ")-----------------------");
-    }
   }
 
   @protected
@@ -43,47 +38,67 @@ abstract class LifecycleState<T extends StatefulWidget> extends State<T> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    //active
-    lifecycleProvider.onPageShow();
-    if (Debug.debugDetail()) {
-      LogPlugin.logInfo(tag: TAG,
-          msg: "------------------didChangeDependencies(" + this.toString() +
-              ")-----------------");
-    }
+    PageVisibilityBinding.instance.addObserver(this, ModalRoute.of(context));
   }
 
   @override
   void didUpdateWidget(T oldWidget) {
     super.didUpdateWidget(oldWidget);
-    //active
-    lifecycleProvider.onPageShow();
-    if (Debug.debugDetail()) {
-      LogPlugin.logInfo(tag: TAG,
-          msg: "------------------didUpdateWidget(" + this.toString() +
-              ")-----------------");
-    }
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    //inactive
-    lifecycleProvider.onPageHide();
-    if (Debug.debugDetail()) {
-      LogPlugin.logInfo(tag: TAG,
-          msg: "------------------deactivate(" + this.toString() +
-              ")----------------------------");
-    }
   }
 
   @override
   void dispose() {
     super.dispose();
+    PageVisibilityBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void onPageCreate() {
+    lifecycleProvider.onPageCreate();
+    if (Debug.debugDetail()) {
+      LogPlugin.logInfo(tag: TAG,
+          msg: "------------------onPageCreate(" + this.toString() +
+              ")-----------------------");
+    }
+  }
+
+  @override
+  void onPageDestroy() {
     lifecycleProvider.onPageDestroy();
     if (Debug.debugDetail()) {
       LogPlugin.logInfo(tag: TAG,
-          msg: "------------------dispose(" + this.toString() +
+          msg: "------------------onPageDestroy(" + this.toString() +
               ")-------------------------------");
+    }
+  }
+
+  @override
+  void onPageHide({bool? isBackgroundEvent}) {
+    if (isBackgroundEvent.boolValue()) {
+      lifecycleProvider.onPageHide();
+      if (Debug.debugDetail()) {
+        LogPlugin.logInfo(tag: TAG,
+            msg: "------------------onPageHide(" + this.toString() +
+                ")----------------------------");
+      }
+    }
+  }
+
+  @override
+  void onPageShow({bool? isForegroundEvent}) {
+    //active
+    if (isForegroundEvent.boolValue()) {
+      lifecycleProvider.onPageShow();
+      if (Debug.debugDetail()) {
+        LogPlugin.logInfo(tag: TAG,
+            msg: "------------------onPageShow(" + this.toString() +
+                ")-----------------");
+      }
     }
   }
 

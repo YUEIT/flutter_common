@@ -17,6 +17,7 @@ class PullListViewModel extends PullViewModel {
         onSuccess: (response){
           List<PullListMode> list = parseResponse(response);
           data.postValue(list);
+          print("code ${data.dataStream.hashCode}");
         },
       )
     );

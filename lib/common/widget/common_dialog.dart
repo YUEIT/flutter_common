@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_common/common/components/provider/dialog_provider.dart';
 import 'package:flutter_common/common/utils/object_extension.dart';
 
 class CommonDialog extends StatelessWidget {
