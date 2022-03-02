@@ -2,7 +2,7 @@ package cn.yue.base.flutter.plugin;
 
 import androidx.annotation.NonNull;
 
-import cn.yue.base.common.utils.debug.ToastUtils;
+import cn.yue.base.common.utils.view.ToastUtils;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -44,19 +44,11 @@ public class ToastPlugin implements FlutterPlugin, MethodChannel.MethodCallHandl
         String msg = call.argument("msg");
         switch (call.method) {
             case "showShort":
-                ToastUtils.showShortToast(msg);
-                result.success(true);
-                break;
-            case "showShortSafe" :
-                ToastUtils.showShortToastSafe(msg);
+                ToastUtils.showShort(msg);
                 result.success(true);
                 break;
             case "showLong" :
-                ToastUtils.showLongToast(msg);
-                result.success(true);
-                break;
-            case "showLongSafe" :
-                ToastUtils.showLongToastSafe(msg);
+                ToastUtils.showLong(msg);
                 result.success(true);
                 break;
             default:

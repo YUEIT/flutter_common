@@ -2,8 +2,10 @@ package cn.yue.base.common.image;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import androidx.annotation.DrawableRes;
+import android.net.Uri;
 import android.widget.ImageView;
+
+import androidx.annotation.DrawableRes;
 
 /**
  * Description :
@@ -36,6 +38,10 @@ public class ImageLoader {
 
         void loadImage(ImageView imageView, Drawable drawable, boolean fitCenter);
 
+        void loadImage(ImageView imageView, Uri uri);
+
+        void loadImage(ImageView imageView, Uri uri, boolean fitCenter);
+
         void loadGif(ImageView imageView, String url);
 
         void loadGif(ImageView imageView, @DrawableRes int resId);
@@ -49,6 +55,8 @@ public class ImageLoader {
         Loader setPlaceholder(@DrawableRes int resId);
 
         void loadImageNoCache(ImageView imageView, String url);
+
+        void loadImageNoCache(ImageView imageView, Uri uri);
 
         void clearCache();
     }

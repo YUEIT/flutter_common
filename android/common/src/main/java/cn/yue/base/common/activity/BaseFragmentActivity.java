@@ -4,15 +4,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,32 +13,35 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
-
-import com.trello.rxlifecycle3.android.ActivityEvent;
-import com.trello.rxlifecycle3.components.support.RxFragmentActivity;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.Lifecycle;
 
 import java.util.List;
 import java.util.UUID;
 
 import cn.yue.base.common.R;
+import cn.yue.base.common.activity.rx.ILifecycleProvider;
+import cn.yue.base.common.activity.rx.RxLifecycleProvider;
 import cn.yue.base.common.utils.app.BarUtils;
 import cn.yue.base.common.utils.app.RunTimePermissionUtil;
-import cn.yue.base.common.utils.debug.ToastUtils;
+import cn.yue.base.common.utils.view.ToastUtils;
 import cn.yue.base.common.widget.TopBar;
 import cn.yue.base.common.widget.dialog.HintDialog;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * Description :
  * Created by yue on 2019/3/11
  */
 
-public abstract class BaseFragmentActivity extends RxFragmentActivity implements ILifecycleProvider<ActivityEvent>{
+public abstract class BaseFragmentActivity extends FragmentActivity {
 
+    private RxLifecycleProvider lifecycleProvider;
     private TopBar topBar;
     private FrameLayout topFL;
     private FrameLayout content;
@@ -57,11 +53,17 @@ public abstract class BaseFragmentActivity extends RxFragmentActivity implements
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        lifecycleProvider = new RxLifecycleProvider();
+        getLifecycle().addObserver(lifecycleProvider);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setSystemBar(false, true, Color.WHITE);
+        setStatusBar();
         setContentView(getContentViewLayoutId());
         initView();
         replace(getFragment(), null, false);
+    }
+
+    public ILifecycleProvider<Lifecycle.Event> getLifecycleProvider() {
+        return lifecycleProvider;
     }
 
     protected int getContentViewLayoutId() {
@@ -87,41 +89,33 @@ public abstract class BaseFragmentActivity extends RxFragmentActivity implements
         });
     }
 
-    public void setSystemBar(boolean isFillUpTop, boolean isDarkIcon) {
-        setSystemBar(isFillUpTop, isDarkIcon, Color.TRANSPARENT);
+    public void setStatusBar() {
+        setStatusBar(false);
     }
 
-    public void setSystemBar(boolean isFillUpTop, boolean isDarkIcon, int bgColor) {
-        try {
-            BarUtils.setStyle(this, isFillUpTop, isDarkIcon, bgColor);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (isFillUpTop) {
-            setFillUpTopLayout(isFillUpTop);
-        }
+    public void setStatusBar(boolean isFullUpTop) {
+        setStatusBar(isFullUpTop, true);
     }
 
-    public void setFillUpTopLayout(boolean isFillUpTop) {
-        int systemBarPadding;
-        int subject;
-        if (isFillUpTop) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                systemBarPadding = 0;
-            } else {
-                systemBarPadding = Math.max(BarUtils.getStatusBarHeight(this), getResources().getDimensionPixelOffset(R.dimen.q50));
-            }
+    public void setStatusBar(boolean isFullUpTop, boolean isDarkIcon) {
+        setStatusBar(isFullUpTop, isDarkIcon, Color.WHITE);
+    }
+
+    public void setStatusBar(boolean isFullUpTop, boolean isDarkIcon, int bgColor) {
+        BarUtils.setStyle(this, true, isDarkIcon, bgColor);
+        setFullUpTopLayout(isFullUpTop);
+    }
+
+    private void setFullUpTopLayout(boolean isFullUpTop) {
+        if (topBar == null) {
+            return;
+        }
+        int subject = R.id.topBar;
+        if (isFullUpTop) {
             subject = 0;
-            if (getTopBar() != null) {
-                getTopBar().setBgColor(Color.TRANSPARENT);
-            }
-        } else {
-            systemBarPadding = 0;
-            subject = R.id.topBar;
+            topBar.setBgColor(Color.TRANSPARENT);
         }
-
         RelativeLayout.LayoutParams topBarLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        topBarLayoutParams.topMargin = systemBarPadding;
         topFL.setLayoutParams(topBarLayoutParams);
         RelativeLayout.LayoutParams contentLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         contentLayoutParams.addRule(RelativeLayout.BELOW, subject);
@@ -129,6 +123,9 @@ public abstract class BaseFragmentActivity extends RxFragmentActivity implements
     }
 
     public TopBar getTopBar() {
+        if (topBar == null) {
+            return new TopBar(this);
+        }
         return topBar;
     }
 
@@ -181,6 +178,10 @@ public abstract class BaseFragmentActivity extends RxFragmentActivity implements
             return (BaseFragment) fragment;
         }
         return null;
+    }
+
+    public void setCurrentFragment(BaseFragment fragment) {
+        this.currentFragment = fragment;
     }
 
     @Override
@@ -264,34 +265,6 @@ public abstract class BaseFragmentActivity extends RxFragmentActivity implements
         }
     }
 
-    @Override
-    public <T> SingleTransformer<T, T> toBindLifecycle() {
-        return new SingleTransformer<T, T>() {
-
-            @Override
-            public SingleSource<T> apply(Single<T> upstream) {
-                return upstream.
-                        compose(bindUntilEvent(ActivityEvent.DESTROY))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread());
-            }
-        };
-    }
-
-    @Override
-    public <T> SingleTransformer<T, T> toBindLifecycle(ActivityEvent activityEvent) {
-        return new SingleTransformer<T, T>() {
-
-            @Override
-            public SingleSource<T> apply(Single<T> upstream) {
-                return upstream.
-                        compose(bindUntilEvent(activityEvent))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread());
-            }
-        };
-    }
-
     /**
      * 权限请求
      * @param permissions
@@ -335,7 +308,7 @@ public abstract class BaseFragmentActivity extends RxFragmentActivity implements
                     if (verificationPermissions(grantResults)) {
                         permissionCallBack.requestSuccess(permissions[i]);
                     } else {
-                        ToastUtils.showShortToast("获取" + RunTimePermissionUtil.getPermissionName(permissions[i]) + "权限失败~");
+                        ToastUtils.showShort("获取" + RunTimePermissionUtil.getPermissionName(permissions[i]) + "权限失败~");
                         permissionCallBack.requestFailed(permissions[i]);
                     }
                 }
@@ -354,9 +327,14 @@ public abstract class BaseFragmentActivity extends RxFragmentActivity implements
     }
 
     private void startSettings() {
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.parse("package:" + getPackageName()));
-        startActivity(intent);
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        } catch (Exception e) {
+            Intent intent = new Intent(Settings.ACTION_SETTINGS);
+            startActivity(intent);
+        }
     }
 
 }

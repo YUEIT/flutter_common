@@ -7,35 +7,36 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.Window;
 
-import com.trello.rxlifecycle3.android.ActivityEvent;
-import com.trello.rxlifecycle3.components.RxActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Lifecycle;
 
+import cn.yue.base.common.activity.rx.ILifecycleProvider;
+import cn.yue.base.common.activity.rx.RxLifecycleProvider;
 import cn.yue.base.common.utils.app.BarUtils;
 import cn.yue.base.common.utils.app.RunTimePermissionUtil;
-import cn.yue.base.common.utils.debug.ToastUtils;
+import cn.yue.base.common.utils.view.ToastUtils;
 import cn.yue.base.common.widget.dialog.HintDialog;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * Description :
  * Created by yue on 2019/3/11
  */
 
-public abstract class BaseActivity extends RxActivity implements ILifecycleProvider<ActivityEvent>{
+public abstract class BaseActivity extends FragmentActivity {
 
+    private ILifecycleProvider<Lifecycle.Event> lifecycleProvider;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        lifecycleProvider = initLifecycleProvider();
+        getLifecycle().addObserver(lifecycleProvider);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         if (hasContentView()) {
+            setStatusBar();
             setContentView(getLayoutId());
         }
         if (getIntent() != null && getIntent().getExtras() != null) {
@@ -44,57 +45,38 @@ public abstract class BaseActivity extends RxActivity implements ILifecycleProvi
         initView();
     }
 
-    protected boolean hasContentView() {
-        return true;
-    }
-
     protected abstract int getLayoutId();
 
     protected abstract void initView();
 
-    protected void initBundle(@NonNull Bundle bundle) {}
-
-    public void setSystemBar(boolean isFillUpTop, boolean isDarkIcon) {
-        setSystemBar(isFillUpTop, isDarkIcon, Color.TRANSPARENT);
+    protected ILifecycleProvider<Lifecycle.Event> initLifecycleProvider() {
+        return new RxLifecycleProvider();
     }
 
-    public void setSystemBar(boolean isFillUpTop, boolean isDarkIcon, int bgColor) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return;
-        }
-        try {
-            BarUtils.setStyle(this, isFillUpTop, isDarkIcon, bgColor);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    protected boolean hasContentView() {
+        return true;
     }
 
-    @Override
-    public <T> SingleTransformer<T, T> toBindLifecycle() {
-        return new SingleTransformer<T, T>() {
+    protected void initBundle(Bundle bundle) {}
 
-            @Override
-            public SingleSource<T> apply(Single<T> upstream) {
-                return upstream.
-                        compose(bindUntilEvent(ActivityEvent.DESTROY))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread());
-            }
-        };
+    public void setStatusBar() {
+        setStatusBar(false);
     }
 
-    @Override
-    public <T> SingleTransformer<T, T> toBindLifecycle(ActivityEvent activityEvent) {
-        return new SingleTransformer<T, T>() {
+    public void setStatusBar(boolean isFullScreen) {
+        setSystemBar(isFullScreen, true);
+    }
 
-            @Override
-            public SingleSource<T> apply(Single<T> upstream) {
-                return upstream.
-                        compose(bindUntilEvent(activityEvent))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread());
-            }
-        };
+    public void setSystemBar(boolean isFullScreen, boolean isDarkIcon) {
+        setSystemBar(isFullScreen, isDarkIcon, Color.WHITE);
+    }
+
+    public void setSystemBar(boolean isFullScreen, boolean isDarkIcon, int bgColor) {
+        BarUtils.setStyle(this, isFullScreen, isDarkIcon, bgColor);
+    }
+
+    public ILifecycleProvider<Lifecycle.Event> getLifecycleProvider() {
+        return lifecycleProvider;
     }
 
     public void requestPermission(String permission, PermissionCallBack permissionCallBack) {
@@ -143,7 +125,7 @@ public abstract class BaseActivity extends RxActivity implements ILifecycleProvi
                     if (verificationPermissions(grantResults)) {
                         permissionCallBack.requestSuccess(permissions[i]);
                     } else {
-                        ToastUtils.showShortToast("获取" + RunTimePermissionUtil.getPermissionName(permissions[i]) + "权限失败~");
+                        ToastUtils.showShort("获取" + RunTimePermissionUtil.getPermissionName(permissions[i]) + "权限失败~");
                         permissionCallBack.requestFailed(permissions[i]);
                     }
                 }
@@ -170,9 +152,14 @@ public abstract class BaseActivity extends RxActivity implements ILifecycleProvi
     }
 
     private void startSettings() {
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.parse("package:" + getPackageName()));
-        startActivity(intent);
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        } catch (Exception e) {
+            Intent intent = new Intent(Settings.ACTION_SETTINGS);
+            startActivity(intent);
+        }
     }
 
 }

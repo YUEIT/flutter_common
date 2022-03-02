@@ -31,7 +31,7 @@ public final class EmojiUtils {
 
     public static void initEmojiSort(int position) {
         EmojiSort sort = new EmojiSort();
-        List<Emoji> emojiList = EmojiConstant.initEmojiList();
+        List<EmojiEmotion> emojiList = Emoji.getEmojiList();
         List<EmojiPage> pageList = new ArrayList<>();
         for (int i = 0; i < emojiList.size(); ) {
             EmojiPage emojiPage = new EmojiPage();
@@ -55,7 +55,7 @@ public final class EmojiUtils {
 
     public static EmojiSort initEmojiSortTest(int position, int sortId) {
         EmojiSort sort = new EmojiSort();
-        List<Emoji> emojiList = EmojiConstant.initEmojiList();
+        List<EmojiEmotion> emojiList = Emoji.getEmojiList();
         List<EmojiPage> pageList = new ArrayList<>();
         for (int i = 0; i < emojiList.size(); ) {
             EmojiPage emojiPage = new EmojiPage();

@@ -26,16 +26,17 @@ public class SwipeRefreshLayout extends androidx.swiperefreshlayout.widget.Swipe
 
     public SwipeRefreshLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-    }
-
-    @Override
-    public void init() {
         setColorSchemeResources(COLORS);
     }
 
     @Override
     public void setTargetView(View targetView) {
 
+    }
+
+    @Override
+    public void setEnabledRefresh(boolean enabled) {
+        super.setEnabled(enabled);
     }
 
     @Override

@@ -1,11 +1,10 @@
 # flutter 工程结构
 
-    flutter 2.0.1版本
+    flutter 2.8.1版本 support null safety
+
+    flutter_boost暂时不支持2.8+版本，额外适配方案https://github.com/alibaba/flutter_boost/issues/1451#issuecomment-998752299
 
 ##### flutter 模式下
-
-    Edit Configurations 配置参数：
-    --no-sound-null-safety --flavor=auto
 
     路由生成命令
             flutter packages pub run build_runner build --delete-conflicting-outputs
@@ -19,4 +18,4 @@
 
 ##### ios 打包
 
-    目录下运行flutter build framework --no-sound-null-safety，将生成的app.framework已经第三方插件引入项目中
+    目录下运行flutter build framework，将生成的app.framework已经第三方插件引入项目中

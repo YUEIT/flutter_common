@@ -16,7 +16,7 @@ import okhttp3.Response;
 public class NoNetInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
-        if (!NetworkUtils.isNetwork()) {
+        if (!NetworkUtils.isConnected()) {
             throw new ResultException(NetworkConfig.ERROR_NO_NET, "网络不给力，请检查您的网络设置~");
         } else {
             return chain.proceed(chain.request());

@@ -3,17 +3,9 @@ package cn.yue.base.flutter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
-
-
-import com.idlefish.flutterboost.FlutterBoost;
 import com.idlefish.flutterboost.containers.FlutterBoostActivity;
-
 import java.util.HashMap;
-import java.util.Map;
-
 import cn.yue.base.middle.router.INavigation;
 import cn.yue.base.middle.router.RouterCard;
 import io.flutter.embedding.android.FlutterActivityLaunchConfigs;
@@ -31,31 +23,27 @@ public class FlutterRouter implements INavigation {
     private RouterCard routerCard;
 
     @Override
-    public void bindRouterCard(RouterCard routerCard) {
+    public FlutterRouter bindRouterCard(RouterCard routerCard) {
         this.routerCard = routerCard;
+        return this;
     }
 
     @Override
     public void navigation(Context context) {
-        navigation((Activity)context, null, 0);
+        navigation((Activity)context,  0, null);
     }
 
     @Override
-    public void navigation(@NonNull Context context, Class toActivity) {
-        navigation((Activity) context, toActivity, 0);
+    public void navigation(@NonNull Context context, int requestCode) {
+        navigation(context, requestCode, null);
     }
 
     @Override
-    public void navigation(Activity context, int requestCode) {
-        navigation(context, null, requestCode);
-    }
-
-    @Override
-    public void navigation(@NonNull Activity context, Class toActivity, int requestCode) {
+    public void navigation(@NonNull Context context, int requestCode, String toActivity) {
         if (routerCard == null) {
             return;
         }
-        Intent intent = new FlutterBoostActivity.CachedEngineIntentBuilder(FlutterBoostActivity.class, FlutterBoost.ENGINE_ID)
+        Intent intent = new FlutterBoostActivity.CachedEngineIntentBuilder(FlutterBoostActivity.class)
                 .backgroundMode(FlutterActivityLaunchConfigs.BackgroundMode.opaque)
                 .destroyEngineWithActivity(false)
                 .uniqueId(getUniqueId())

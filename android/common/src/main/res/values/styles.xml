@@ -14,19 +14,6 @@
         <item name="android:windowExitAnimation">@anim/fade_out</item>
     </style>
 
-    <declare-styleable name="SwipeItemLayout">
-        <attr name="bga_sil_swipeDirection" format="enum">
-            <enum name="left" value="0" />
-            <enum name="right" value="1" />
-        </attr>
-        <attr name="bga_sil_bottomMode" format="enum">
-            <enum name="pullOut" value="0" />
-            <enum name="layDown" value="1" />
-        </attr>
-        <attr name="bga_sil_springDistance" format="dimension" />
-        <attr name="bga_sil_swipeAble" format="boolean" />
-    </declare-styleable>
-
     <style name="BottomAnimStyle">
         <item name="android:windowEnterAnimation">@anim/bottom_in</item>
         <item name="android:windowExitAnimation">@anim/bottom_out</item>
@@ -51,14 +38,5 @@
         <item name="android:windowEnterAnimation">@anim/right_in</item>
         <item name="android:windowExitAnimation">@anim/right_out</item>
     </style>
-
-    <declare-styleable name="Passwordinputview">
-        <attr name="passwordLength" format="integer" />
-        <attr name="borderWidth" format="dimension" />
-        <attr name="borderRadius" format="dimension" />
-        <attr name="borderColor" format="color" />
-        <attr name="passwordWidth" format="dimension" />
-        <attr name="passwordColor" format="color" />
-    </declare-styleable>
 
 </resources>

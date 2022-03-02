@@ -67,9 +67,8 @@ public class LaunchActivity extends BaseActivity {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                FRouter.getInstance()
-                        .build("/app/flutterJump")
-                        .navigation(LaunchActivity.this);
+                Intent intent = new Intent(LaunchActivity.this, FlutterJumpActivity.class);
+                startActivity(intent);
                 finish();
             }
         },500);

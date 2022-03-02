@@ -8,11 +8,13 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.text.TextUtils;
+import android.widget.ImageView;
+
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.text.TextUtils;
-import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
@@ -48,7 +50,7 @@ class GlideImageLoader implements ImageLoader.Loader {
         if (imageView == null) {
             return;
         }
-        realLoadImage(imageView, url, 0, null, fitCenter);
+        realLoadImage(imageView, url, 0, null, null, fitCenter);
     }
 
     @Override
@@ -64,7 +66,7 @@ class GlideImageLoader implements ImageLoader.Loader {
         if (imageView == null) {
             return;
         }
-        realLoadImage(imageView, null, resId, null, fitCenter);
+        realLoadImage(imageView, null, resId, null, null, fitCenter);
     }
 
     @Override
@@ -80,10 +82,26 @@ class GlideImageLoader implements ImageLoader.Loader {
         if (imageView == null) {
             return;
         }
-        realLoadImage(imageView, null, 0, drawable, fitCenter);
+        realLoadImage(imageView, null, 0, drawable, null, fitCenter);
     }
 
-    private void realLoadImage(ImageView imageView, String url, int resId, Drawable drawable, boolean fitCenter) {
+    @Override
+    public void loadImage(ImageView imageView, Uri uri) {
+        if (imageView == null) {
+            return;
+        }
+        loadImage(imageView, uri, false);
+    }
+
+    @Override
+    public void loadImage(ImageView imageView, Uri uri, boolean fitCenter) {
+        if (imageView == null) {
+            return;
+        }
+        realLoadImage(imageView, null, 0, null, uri, false);
+    }
+
+    private void realLoadImage(ImageView imageView, String url, int resId, Drawable drawable, Uri uri, boolean fitCenter) {
         if (imageView == null) {
             return;
         }
@@ -103,6 +121,10 @@ class GlideImageLoader implements ImageLoader.Loader {
         if (drawable != null) {
             requestBuilder = Glide.with(imageView.getContext())
                     .load(drawable);
+        }
+        if (uri != null) {
+            requestBuilder = Glide.with(imageView.getContext())
+                    .load(uri);
         }
         if (requestBuilder == null) {
             return;
@@ -195,6 +217,17 @@ class GlideImageLoader implements ImageLoader.Loader {
     public void loadImageNoCache(ImageView imageView, String url) {
         Glide.with(imageView.getContext())
                 .load(url)
+                .apply(getRequestOptions()
+                        .skipMemoryCache(true)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .dontAnimate())
+                .into(imageView);
+    }
+
+    @Override
+    public void loadImageNoCache(ImageView imageView, Uri uri) {
+        Glide.with(imageView.getContext())
+                .load(uri)
                 .apply(getRequestOptions()
                         .skipMemoryCache(true)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)

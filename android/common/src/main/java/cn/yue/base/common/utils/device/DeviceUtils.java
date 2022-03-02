@@ -3,49 +3,59 @@ package cn.yue.base.common.utils.device;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
-import java.io.BufferedReader;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
+
 import java.io.File;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.UUID;
 
 import cn.yue.base.common.utils.Utils;
-import cn.yue.base.common.utils.code.SharePreferencesUtils;
 import cn.yue.base.common.utils.code.ShellUtils;
-import cn.yue.base.common.utils.debug.LogUtils;
+import cn.yue.base.common.utils.UtilsBridge;
+
+import static android.Manifest.permission.ACCESS_WIFI_STATE;
+import static android.Manifest.permission.CHANGE_WIFI_STATE;
+import static android.Manifest.permission.INTERNET;
+import static android.content.Context.WIFI_SERVICE;
 
 /**
- * Description : 设备相关工具类
- * Created by yue on 2019/3/11
+ * <pre>
+ *     author: Blankj
+ *     blog  : http://blankj.com
+ *     time  : 2016/8/1
+ *     desc  : utils about device
+ * </pre>
  */
-public class DeviceUtils {
+public final class DeviceUtils {
 
     private DeviceUtils() {
         throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
     /**
-     * 判断设备是否root
+     * Return whether device is rooted.
      *
-     * @return the boolean{@code true}: 是<br>{@code false}: 否
+     * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isDeviceRooted() {
         String su = "su";
-        String[] locations = {"/system/bin/", "/system/xbin/", "/sbin/", "/system/sd/xbin/", "/system/bin/failsafe/",
-                "/data/local/xbin/", "/data/local/bin/", "/data/local/"};
+        String[] locations = {"/system/bin/", "/system/xbin/", "/sbin/", "/system/sd/xbin/",
+                "/system/bin/failsafe/", "/data/local/xbin/", "/data/local/bin/", "/data/local/",
+                "/system/sbin/", "/usr/bin/", "/vendor/bin/"};
         for (String location : locations) {
             if (new File(location + su).exists()) {
                 return true;
@@ -55,117 +65,137 @@ public class DeviceUtils {
     }
 
     /**
-     * 获取设备系统版本号
+     * Return whether ADB is enabled.
      *
-     * @return 设备系统版本号
+     * @return {@code true}: yes<br>{@code false}: no
      */
-    public static int getSDKVersion() {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    public static boolean isAdbEnabled() {
+        return Settings.Secure.getInt(
+                Utils.getApp().getContentResolver(),
+                Settings.Global.ADB_ENABLED, 0
+        ) > 0;
+    }
+
+    /**
+     * Return the version name of device's system.
+     *
+     * @return the version name of device's system
+     */
+    public static String getSDKVersionName() {
+        return Build.VERSION.RELEASE;
+    }
+
+    /**
+     * Return version code of device's system.
+     *
+     * @return version code of device's system
+     */
+    public static int getSDKVersionCode() {
         return Build.VERSION.SDK_INT;
     }
 
-
     /**
-     * 获取设备AndroidID
+     * Return the android id of device.
      *
-     * @return AndroidID
+     * @return the android id of device
      */
     @SuppressLint("HardwareIds")
     public static String getAndroidID() {
-        return Settings.Secure.getString(Utils.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        String id = Settings.Secure.getString(
+                Utils.getApp().getContentResolver(),
+                Settings.Secure.ANDROID_ID
+        );
+        if ("9774d56d682e549c".equals(id)) return "";
+        return id == null ? "" : id;
     }
 
     /**
-     * 最靠谱获取mac地址
+     * Return the MAC address.
+     * <p>Must hold {@code <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />},
+     * {@code <uses-permission android:name="android.permission.INTERNET" />},
+     * {@code <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />}</p>
      *
-     * @re
+     * @return the MAC address
      */
-    public static String getCmdMacAddress() {
-        String result = "";
-        String Mac = "";
-        result = callCmd("busybox ifconfig", "HWaddr");
-
-        if (result == null) {
-            return "网络出错，请检查网络";
-        }
-        if (result.length() > 0 && result.contains("HWaddr")) {
-            Mac = result.substring(result.indexOf("HWaddr") + 6, result.length() - 1);
-            if (Mac.length() > 1) {
-                result = Mac.toLowerCase();
-            }
-        }
-        return result.trim();
-    }
-
-    public static String callCmd(String cmd, String filter) {
-        String result = "";
-        String line = "";
-        InputStreamReader is = null;
-        BufferedReader br = null;
-
-        try {
-            Process proc = Runtime.getRuntime().exec(cmd);
-            is = new InputStreamReader(proc.getInputStream());
-            br = new BufferedReader(is);
-
-            //执行命令cmd，只取结果中含有filter的这一行
-            while ((line = br.readLine()) != null && !line.contains(filter)) {
-                //result += line;
-                LogUtils.i("zxj", "line: " + line);
-            }
-
-            result = line;
-            LogUtils.i("zxj", "result: " + result);
-
-            if (br != null){
-                br.close();
-            }
-
-            if (is != null){
-                is.close();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return result;
-    }
-
-    /**
-     * 获取设备MAC地址
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>}</p>
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.INTERNET"/>}</p>
-     *
-     * @return MAC地址
-     */
+    @RequiresPermission(allOf = {ACCESS_WIFI_STATE, INTERNET, CHANGE_WIFI_STATE})
     public static String getMacAddress() {
-        String macAddress = getMacAddressByWifiInfo();
-        if (!"02:00:00:00:00:00".equals(macAddress)) {
+        String macAddress = getMacAddress((String[]) null);
+        if (!macAddress.equals("") || getWifiEnabled()) return macAddress;
+        setWifiEnabled(true);
+        setWifiEnabled(false);
+        return getMacAddress((String[]) null);
+    }
+
+    private static boolean getWifiEnabled() {
+        @SuppressLint("WifiManagerLeak")
+        WifiManager manager = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        if (manager == null) return false;
+        return manager.isWifiEnabled();
+    }
+
+    /**
+     * Enable or disable wifi.
+     * <p>Must hold {@code <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />}</p>
+     *
+     * @param enabled True to enabled, false otherwise.
+     */
+    @RequiresPermission(CHANGE_WIFI_STATE)
+    private static void setWifiEnabled(final boolean enabled) {
+        @SuppressLint("WifiManagerLeak")
+        WifiManager manager = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        if (manager == null) return;
+        if (enabled == manager.isWifiEnabled()) return;
+        manager.setWifiEnabled(enabled);
+    }
+
+    /**
+     * Return the MAC address.
+     * <p>Must hold {@code <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />},
+     * {@code <uses-permission android:name="android.permission.INTERNET" />}</p>
+     *
+     * @return the MAC address
+     */
+    @RequiresPermission(allOf = {ACCESS_WIFI_STATE, INTERNET})
+    public static String getMacAddress(final String... excepts) {
+        String macAddress = getMacAddressByNetworkInterface();
+        if (isAddressNotInExcepts(macAddress, excepts)) {
             return macAddress;
         }
-        macAddress = getMacAddressByNetworkInterface();
-        if (!"02:00:00:00:00:00".equals(macAddress)) {
+        macAddress = getMacAddressByInetAddress();
+        if (isAddressNotInExcepts(macAddress, excepts)) {
+            return macAddress;
+        }
+        macAddress = getMacAddressByWifiInfo();
+        if (isAddressNotInExcepts(macAddress, excepts)) {
             return macAddress;
         }
         macAddress = getMacAddressByFile();
-        if (!"02:00:00:00:00:00".equals(macAddress)) {
+        if (isAddressNotInExcepts(macAddress, excepts)) {
             return macAddress;
         }
-        return "please open wifi";
+        return "";
     }
 
-    /**
-     * 获取设备MAC地址
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>}</p>
-     *
-     * @return MAC地址
-     */
-    @SuppressLint("HardwareIds")
+    private static boolean isAddressNotInExcepts(final String address, final String... excepts) {
+        if (excepts == null || excepts.length == 0) {
+            return !"02:00:00:00:00:00".equals(address);
+        }
+        for (String filter : excepts) {
+            if (address.equals(filter)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @SuppressLint({"MissingPermission", "HardwareIds"})
     private static String getMacAddressByWifiInfo() {
         try {
-            @SuppressLint("WifiManagerLeak") WifiManager wifi = (WifiManager) Utils.getContext().getSystemService(Context.WIFI_SERVICE);
+            final WifiManager wifi = (WifiManager) Utils.getApp()
+                    .getApplicationContext().getSystemService(WIFI_SERVICE);
             if (wifi != null) {
-                WifiInfo info = wifi.getConnectionInfo();
+                final WifiInfo info = wifi.getConnectionInfo();
                 if (info != null) return info.getMacAddress();
             }
         } catch (Exception e) {
@@ -174,24 +204,19 @@ public class DeviceUtils {
         return "02:00:00:00:00:00";
     }
 
-    /**
-     * 获取设备MAC地址
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.INTERNET"/>}</p>
-     *
-     * @return MAC地址
-     */
     private static String getMacAddressByNetworkInterface() {
         try {
-            List<NetworkInterface> nis = Collections.list(NetworkInterface.getNetworkInterfaces());
-            for (NetworkInterface ni : nis) {
-                if (!ni.getName().equalsIgnoreCase("wlan0")) continue;
+            Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                if (ni == null || !ni.getName().equalsIgnoreCase("wlan0")) continue;
                 byte[] macBytes = ni.getHardwareAddress();
                 if (macBytes != null && macBytes.length > 0) {
-                    StringBuilder res1 = new StringBuilder();
+                    StringBuilder sb = new StringBuilder();
                     for (byte b : macBytes) {
-                        res1.append(String.format("%02x:", b));
+                        sb.append(String.format("%02x:", b));
                     }
-                    return res1.deleteCharAt(res1.length() - 1).toString();
+                    return sb.substring(0, sb.length() - 1);
                 }
             }
         } catch (Exception e) {
@@ -200,20 +225,60 @@ public class DeviceUtils {
         return "02:00:00:00:00:00";
     }
 
-    /**
-     * 获取设备MAC地址
-     *
-     * @return MAC地址
-     */
+    private static String getMacAddressByInetAddress() {
+        try {
+            InetAddress inetAddress = getInetAddress();
+            if (inetAddress != null) {
+                NetworkInterface ni = NetworkInterface.getByInetAddress(inetAddress);
+                if (ni != null) {
+                    byte[] macBytes = ni.getHardwareAddress();
+                    if (macBytes != null && macBytes.length > 0) {
+                        StringBuilder sb = new StringBuilder();
+                        for (byte b : macBytes) {
+                            sb.append(String.format("%02x:", b));
+                        }
+                        return sb.substring(0, sb.length() - 1);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "02:00:00:00:00:00";
+    }
+
+    private static InetAddress getInetAddress() {
+        try {
+            Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                // To prevent phone of xiaomi return "10.0.2.15"
+                if (!ni.isUp()) continue;
+                Enumeration<InetAddress> addresses = ni.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress inetAddress = addresses.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        String hostAddress = inetAddress.getHostAddress();
+                        if (hostAddress.indexOf(':') < 0) return inetAddress;
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private static String getMacAddressByFile() {
-        ShellUtils.CommandResult result = ShellUtils.execCmd("getprop wifi.interface", false);
+        ShellUtils.CommandResult result = UtilsBridge.execCmd("getprop wifi.interface", false);
         if (result.result == 0) {
             String name = result.successMsg;
             if (name != null) {
-                result = ShellUtils.execCmd("cat /sys/class/net/" + name + "/address", false);
+                result = UtilsBridge.execCmd("cat /sys/class/net/" + name + "/address", false);
                 if (result.result == 0) {
-                    if (result.successMsg != null) {
-                        return result.successMsg;
+                    String address = result.successMsg;
+                    if (address != null && address.length() > 0) {
+                        return address;
                     }
                 }
             }
@@ -222,21 +287,20 @@ public class DeviceUtils {
     }
 
     /**
-     * 获取设备厂商
-     * <p>如Xiaomi</p>
+     * Return the manufacturer of the product/hardware.
+     * <p>e.g. Xiaomi</p>
      *
-     * @return 设备厂商
+     * @return the manufacturer of the product/hardware
      */
-
     public static String getManufacturer() {
         return Build.MANUFACTURER;
     }
 
     /**
-     * 获取设备型号
-     * <p>如MI2SC</p>
+     * Return the model of device.
+     * <p>e.g. MI2SC</p>
      *
-     * @return 设备型号
+     * @return the model of device
      */
     public static String getModel() {
         String model = Build.MODEL;
@@ -249,283 +313,195 @@ public class DeviceUtils {
     }
 
     /**
-     * 关机
-     * <p>需要root权限或者系统权限 {@code <android:sharedUserId="android.uid.system"/>}</p>
-     */
-    public static void shutdown() {
-        ShellUtils.execCmd("reboot -p", true);
-        Intent intent = new Intent("android.intent.action.ACTION_REQUEST_SHUTDOWN");
-        intent.putExtra("android.intent.extra.KEY_CONFIRM", false);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Utils.getContext().startActivity(intent);
-    }
-
-    /**
-     * 重启
-     * <p>需要root权限或者系统权限 {@code <android:sharedUserId="android.uid.system"/>}</p>
+     * Return an ordered list of ABIs supported by this device. The most preferred ABI is the first
+     * element in the list.
      *
+     * @return an ordered list of ABIs supported by this device
      */
-    public static void reboot() {
-        ShellUtils.execCmd("reboot", true);
-        Intent intent = new Intent(Intent.ACTION_REBOOT);
-        intent.putExtra("nowait", 1);
-        intent.putExtra("interval", 1);
-        intent.putExtra("window", 0);
-        Utils.getContext().sendBroadcast(intent);
-    }
-
-    /**
-     * 重启
-     * <p>需系统权限 {@code <android:sharedUserId="android.uid.system"/>}</p>
-     *
-     * @param reason  传递给内核来请求特殊的引导模式，如"recovery"
-     */
-    public static void reboot(String reason) {
-        PowerManager mPowerManager = (PowerManager) Utils.getContext().getSystemService(Context.POWER_SERVICE);
-        try {
-            mPowerManager.reboot(reason);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static String[] getABIs() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return Build.SUPPORTED_ABIS;
+        } else {
+            if (!TextUtils.isEmpty(Build.CPU_ABI2)) {
+                return new String[]{Build.CPU_ABI, Build.CPU_ABI2};
+            }
+            return new String[]{Build.CPU_ABI};
         }
     }
 
     /**
-     * 重启到recovery
-     * <p>需要root权限</p>
-     */
-    public static void reboot2Recovery() {
-        ShellUtils.execCmd("reboot recovery", true);
-    }
-
-    /**
-     * 重启到bootloader
-     * <p>需要root权限</p>
-     */
-    public static void reboot2Bootloader() {
-        ShellUtils.execCmd("reboot bootloader", true);
-    }
-
-    /**
-     * 获取当前设备ip
+     * Return whether device is tablet.
      *
-     * @return
+     * @return {@code true}: yes<br>{@code false}: no
      */
-    public static String getIP() {
-        String IP = null;
-        StringBuilder IPStringBuilder = new StringBuilder();
-        try {
-            Enumeration<NetworkInterface> networkInterfaceEnumeration = NetworkInterface.getNetworkInterfaces();
-            while (networkInterfaceEnumeration.hasMoreElements()) {
-                NetworkInterface networkInterface = networkInterfaceEnumeration.nextElement();
-                Enumeration<InetAddress> inetAddressEnumeration = networkInterface.getInetAddresses();
-                while (inetAddressEnumeration.hasMoreElements()) {
-                    InetAddress inetAddress = inetAddressEnumeration.nextElement();
-                    if (!inetAddress.isLoopbackAddress() &&
-                            !inetAddress.isLinkLocalAddress() &&
-                            inetAddress.isSiteLocalAddress()) {
-                        IPStringBuilder.append(inetAddress.getHostAddress().toString() + "\n");
+    public static boolean isTablet() {
+        return (Resources.getSystem().getConfiguration().screenLayout
+                & Configuration.SCREENLAYOUT_SIZE_MASK)
+                >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+    }
+
+    /**
+     * Return whether device is emulator.
+     *
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isEmulator() {
+        boolean checkProperty = Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.toLowerCase().contains("vbox")
+                || Build.FINGERPRINT.toLowerCase().contains("test-keys")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                || "google_sdk".equals(Build.PRODUCT);
+        if (checkProperty) return true;
+
+        String operatorName = "";
+        TelephonyManager tm = (TelephonyManager) Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE);
+        if (tm != null) {
+            String name = tm.getNetworkOperatorName();
+            if (name != null) {
+                operatorName = name;
+            }
+        }
+        boolean checkOperatorName = operatorName.toLowerCase().equals("android");
+        if (checkOperatorName) return true;
+
+        String url = "tel:" + "123456";
+        Intent intent = new Intent();
+        intent.setData(Uri.parse(url));
+        intent.setAction(Intent.ACTION_DIAL);
+        boolean checkDial = intent.resolveActivity(Utils.getApp().getPackageManager()) == null;
+        if (checkDial) return true;
+
+//        boolean checkDebuggerConnected = Debug.isDebuggerConnected();
+//        if (checkDebuggerConnected) return true;
+
+        return false;
+    }
+
+
+    private static final    String KEY_UDID = "KEY_UDID";
+    private volatile static String udid;
+
+    /**
+     * Return the unique device id.
+     * <pre>{1}{UUID(macAddress)}</pre>
+     * <pre>{2}{UUID(androidId )}</pre>
+     * <pre>{9}{UUID(random    )}</pre>
+     *
+     * @return the unique device id
+     */
+    @SuppressLint({"MissingPermission", "HardwareIds"})
+    public static String getUniqueDeviceId() {
+        return getUniqueDeviceId("", true);
+    }
+
+    /**
+     * Return the unique device id.
+     * <pre>android 10 deprecated {prefix}{1}{UUID(macAddress)}</pre>
+     * <pre>{prefix}{2}{UUID(androidId )}</pre>
+     * <pre>{prefix}{9}{UUID(random    )}</pre>
+     *
+     * @param prefix The prefix of the unique device id.
+     * @return the unique device id
+     */
+    @SuppressLint({"MissingPermission", "HardwareIds"})
+    public static String getUniqueDeviceId(String prefix) {
+        return getUniqueDeviceId(prefix, true);
+    }
+
+    /**
+     * Return the unique device id.
+     * <pre>{1}{UUID(macAddress)}</pre>
+     * <pre>{2}{UUID(androidId )}</pre>
+     * <pre>{9}{UUID(random    )}</pre>
+     *
+     * @param useCache True to use cache, false otherwise.
+     * @return the unique device id
+     */
+    @SuppressLint({"MissingPermission", "HardwareIds"})
+    public static String getUniqueDeviceId(boolean useCache) {
+        return getUniqueDeviceId("", useCache);
+    }
+
+    /**
+     * Return the unique device id.
+     * <pre>android 10 deprecated {prefix}{1}{UUID(macAddress)}</pre>
+     * <pre>{prefix}{2}{UUID(androidId )}</pre>
+     * <pre>{prefix}{9}{UUID(random    )}</pre>
+     *
+     * @param prefix   The prefix of the unique device id.
+     * @param useCache True to use cache, false otherwise.
+     * @return the unique device id
+     */
+    @SuppressLint({"MissingPermission", "HardwareIds"})
+    public static String getUniqueDeviceId(String prefix, boolean useCache) {
+        if (!useCache) {
+            return getUniqueDeviceIdReal(prefix);
+        }
+        if (udid == null) {
+            synchronized (DeviceUtils.class) {
+                if (udid == null) {
+                    final String id = UtilsBridge.getSpUtils4Utils().getString(KEY_UDID, null);
+                    if (id != null) {
+                        udid = id;
+                        return udid;
                     }
+                    return getUniqueDeviceIdReal(prefix);
                 }
             }
-        } catch (SocketException ex) {
-
         }
-
-        IP = IPStringBuilder.toString();
-        return IP;
+        return udid;
     }
 
-    /**
-     * 获取用户唯一标识，比如GSM网络的IMSI编号
-     *
-     * @return
-     */
-    @SuppressLint("MissingPermission")
-    public static String getSubscriberId() {
+    private static String getUniqueDeviceIdReal(String prefix) {
         try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getSubscriberId();
+            final String androidId = getAndroidID();
+            if (!TextUtils.isEmpty(androidId)) {
+                return saveUdid(prefix + 2, androidId);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+
+        } catch (Exception ignore) {/**/}
+        return saveUdid(prefix + 9, "");
     }
 
-    /**
-     * 获取SIM卡的序列号(IMEI)
-     *
-     * @return
-     */
-    @SuppressLint("MissingPermission")
-    public static String getSimSerialNumber() {
-        try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getSimSerialNumber();
+    @SuppressLint({"MissingPermission", "HardwareIds"})
+    public static boolean isSameDevice(final String uniqueDeviceId) {
+        // {prefix}{type}{32id}
+        if (TextUtils.isEmpty(uniqueDeviceId) && uniqueDeviceId.length() < 33) return false;
+        if (uniqueDeviceId.equals(udid)) return true;
+        final String cachedId = UtilsBridge.getSpUtils4Utils().getString(KEY_UDID, null);
+        if (uniqueDeviceId.equals(cachedId)) return true;
+        int st = uniqueDeviceId.length() - 33;
+        String type = uniqueDeviceId.substring(st, st + 1);
+        if (type.startsWith("1")) {
+            String macAddress = getMacAddress();
+            if (macAddress.equals("")) {
+                return false;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * 获取SIM卡运营商名称
-     *
-     * @return
-     */
-    public static String getSimOperatorName() {
-
-        try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getSimOperatorName();
+            return uniqueDeviceId.substring(st + 1).equals(getUdid("", macAddress));
+        } else if (type.startsWith("2")) {
+            final String androidId = getAndroidID();
+            if (TextUtils.isEmpty(androidId)) {
+                return false;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            return uniqueDeviceId.substring(st + 1).equals(getUdid("", androidId));
         }
-        return null;
+        return false;
     }
 
-    /**
-     * 获取MCC+MNC代码 (SIM卡运营商国家代码和运营商网络代码)(IMSI)
-     *
-     * @return
-     */
-    public static String getSimOperator() {
-        if (null != Utils.getContext()) {
-            TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-            return tm.getSimOperator();
-        }
-        return null;
+    private static String saveUdid(String prefix, String id) {
+        udid = getUdid(prefix, id);
+        UtilsBridge.getSpUtils4Utils().put(KEY_UDID, udid);
+        return udid;
     }
 
-    /**
-     * 获取SIM卡提供商的国家代码
-     *
-     * @return
-     */
-    public static String getSimCountryIso() {
-        try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getSimCountryIso();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    private static String getUdid(String prefix, String id) {
+        if (id.equals("")) {
+            return prefix + UUID.randomUUID().toString().replace("-", "");
         }
-        return null;
+        return prefix + UUID.nameUUIDFromBytes(id.getBytes()).toString().replace("-", "");
     }
-
-    /**
-     * 获取移动终端的类型
-     * <p/>
-     * PHONE_TYPE_CDMA  手机制式为CDMA，电信
-     * PHONE_TYPE_GSM   手机制式为GSM，移动和联通
-     * PHONE_TYPE_NONE  手机制式未知
-     *
-     * @return
-     */
-    public static int getPhoneType() {
-        try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getPhoneType();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return TelephonyManager.PHONE_TYPE_NONE;
-    }
-
-    /**
-     * 获取网络类型
-     * <p/>
-     * NETWORK_TYPE_CDMA   网络类型为CDMA
-     * NETWORK_TYPE_EDGE   网络类型为EDGE
-     * NETWORK_TYPE_EVDO_0 网络类型为EVDO0
-     * NETWORK_TYPE_EVDO_A 网络类型为EVDOA
-     * NETWORK_TYPE_GPRS   网络类型为GPRS
-     * NETWORK_TYPE_HSDPA  网络类型为HSDPA
-     * NETWORK_TYPE_HSPA   网络类型为HSPA
-     * NETWORK_TYPE_HSUPA  网络类型为HSUPA
-     * NETWORK_TYPE_UMTS   网络类型为UMTS
-     * <p/>
-     * 在中国，联通的3G为UMTS或HSDPA，移动和联通的2G为GPRS或EGDE，电信的2G为CDMA，电信的3G为EVDO
-     *
-     * @return
-     */
-    public static int getNetworkType() {
-        try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getNetworkType();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return TelephonyManager.NETWORK_TYPE_GPRS;
-    }
-
-    /**
-     * 获取移动网络运营商的名字(SPN)
-     *
-     * @return
-     */
-    public static String getNetworkOperatorName() {
-        try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getNetworkOperatorName();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * 获移动终端的唯一标识.如果是GSM网络，返回IMEI；如果是CDMA网络，返回MEID
-     *
-     * @return
-     */
-    @SuppressLint("MissingPermission")
-    public static String getDeviceId() {
-        try {
-            if (null != Utils.getContext()) {
-                TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
-                return tm.getDeviceId();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * device_id 必须是 长度： 16~64位的字符串
-     * 万一获取不到device_id
-     * 自己构造一个随机字符串
-     * 本地持久化
-     * 不要每次启动变更
-     *
-     * @return
-     */
-    public static String KEY_CST_DEVICE_ID = "key_cst_device_id";
-
-    public static String getNullDeviceId(String deviceId) {
-        if (TextUtils.isEmpty(deviceId) || deviceId.length() < 16) {//说明获取不到了，或者小于16
-            //先从本地持久化取
-            String cstDeviceId = SharePreferencesUtils.getInstance().getString(KEY_CST_DEVICE_ID, "");
-            if (TextUtils.isEmpty(cstDeviceId)) {//娶不到自己构造一个随机字符串，并保存
-                cstDeviceId = UUID.randomUUID().toString();
-                SharePreferencesUtils.getInstance().put(KEY_CST_DEVICE_ID, cstDeviceId);
-            }
-            return cstDeviceId;
-        }
-        return deviceId;
-    }
-
 }

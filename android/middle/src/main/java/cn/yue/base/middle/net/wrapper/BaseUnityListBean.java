@@ -13,11 +13,8 @@ public class BaseUnityListBean<T> {
     private List<T> page_list;  //分页式
     private List<T> dataList;
     private int total;
-    private int page_count;
     private int pageCount;
-    private int page_size;
     private int pageSize;
-    private int page_no;
     private int pageNo;
     private int count;//
     private String nt;	//版本Id，用作下一页版本号，null表示没有下一页
@@ -34,76 +31,90 @@ public class BaseUnityListBean<T> {
         return null;
     }
 
+    protected int getRealPageSize() {
+        List<T> realList = getRealList();
+        if (pageSize > 0) {
+            return pageSize;
+        } else if (realList != null && realList.size() > 0) {
+            return realList.size();
+        }
+        return 0;
+    }
+
     protected int getRealTotal() {
         return count == 0 ? total : count;
     }
 
-    protected int getRealPageCount() {
-        if (pageCount > 0) {
-            return pageCount;
-        } else if (page_count > 0) {
-            return page_count;
-        }
-        return 0;
-    }
-
-    protected int getRealPageSize() {
-        if (pageSize > 0) {
-            return pageSize;
-        } else if (page_size > 0) {
-            return page_size;
-        }
-        return 0;
-    }
-
     protected int getRealPageNo() {
-        if (pageNo > 0) {
-            return pageNo;
-        } else if (page_no > 0) {
-            return page_no;
-        }
-        return 0;
+        return pageNo;
     }
 
-    protected int getRealCount() {
-        return count == 0 ? total : count;
-    }
-
-    protected String getNt() {
+    protected String getRealPageNt() {
         return nt;
     }
 
-    protected String getPt() {
-        return pt;
+
+    public List<T> getList() {
+        return list;
     }
-
-
-    public boolean isDataEmpty(){
-        return getRealList()==null||getRealList().size()==0;
-    }
-
 
     public void setList(List<T> list) {
         this.list = list;
+    }
+
+    public int getTotal() {
+        return total;
     }
 
     public void setTotal(int total) {
         this.total = total;
     }
 
+    public int getPageCount() {
+        return pageCount;
+    }
+
+    public void setPageCount(int pageCount) {
+        this.pageCount = pageCount;
+    }
+
+    public int getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public int getPageNo() {
+        return pageNo;
+    }
+
     public void setPageNo(int pageNo) {
         this.pageNo = pageNo;
+    }
+
+    public int getCount() {
+        return count;
     }
 
     public void setCount(int count) {
         this.count = count;
     }
 
+    public String getNt() {
+        return nt;
+    }
+
     public void setNt(String nt) {
         this.nt = nt;
     }
 
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
+    public String getPt() {
+        return pt;
+    }
+
+    public void setPt(String pt) {
+        this.pt = pt;
     }
 }

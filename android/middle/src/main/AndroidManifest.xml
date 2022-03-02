@@ -1,14 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cn.yue.base.middle" >
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application>
-        <activity android:name="cn.yue.base.middle.activity.CommonActivity"
+        <activity android:name=".activity.CommonActivity"
             android:screenOrientation="portrait"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
-
-        <activity android:name="cn.yue.base.middle.activity.CommonTransparentActivity"
-            android:hardwareAccelerated="false"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:theme="@style/AppFullTheme"/>
+            android:configChanges="keyboardHidden|orientation|screenSize"/>
     </application>
 </manifest>

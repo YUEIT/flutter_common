@@ -16,7 +16,7 @@ public class EmojiPage implements IEmotionPage {
 
     private int row = 7;
 
-    private List<Emoji> emotionList;
+    private List<EmojiEmotion> emotionList;
 
 
     public int getIndex() {
@@ -43,7 +43,7 @@ public class EmojiPage implements IEmotionPage {
         this.row = row;
     }
 
-    public void setEmotionList(List<Emoji> emotionList) {
+    public void setEmotionList(List<EmojiEmotion> emotionList) {
         this.emotionList = emotionList;
     }
 
@@ -53,7 +53,7 @@ public class EmojiPage implements IEmotionPage {
     }
 
     @Override
-    public List<Emoji> getEmotionList() {
+    public List<EmojiEmotion> getEmotionList() {
         return emotionList;
     }
 

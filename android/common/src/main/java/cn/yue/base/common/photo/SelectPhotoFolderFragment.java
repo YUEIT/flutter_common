@@ -3,17 +3,22 @@ package cn.yue.base.common.photo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.widget.ImageView;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.widget.ImageView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import cn.yue.base.common.R;
 import cn.yue.base.common.activity.BaseFragment;
 import cn.yue.base.common.image.ImageLoader;
-import cn.yue.base.common.utils.code.ThreadPoolUtils;
+import cn.yue.base.common.photo.data.MediaFolderVO;
+import cn.yue.base.common.photo.data.MediaType;
+import cn.yue.base.common.photo.data.MediaVO;
+import cn.yue.base.common.utils.code.ThreadUtils;
 import cn.yue.base.common.widget.TopBar;
 import cn.yue.base.common.widget.recyclerview.CommonAdapter;
 import cn.yue.base.common.widget.recyclerview.CommonViewHolder;
@@ -28,8 +33,7 @@ public class SelectPhotoFolderFragment extends BaseFragment {
     private CommonAdapter commonAdapter;
 
     @Override
-    protected void initTopBar(TopBar topBar) {
-    }
+    protected void initTopBar(TopBar topBar) { }
 
     @Override
     protected int getLayoutId() {
@@ -40,20 +44,20 @@ public class SelectPhotoFolderFragment extends BaseFragment {
     protected void initView(Bundle savedInstanceState) {
         RecyclerView rv = findViewById(R.id.photoRV);
         rv.setLayoutManager(new LinearLayoutManager(mActivity));
-        rv.setAdapter(commonAdapter = new CommonAdapter<PhotoFolderVO>(mActivity, allFolder) {
+        rv.setAdapter(commonAdapter = new CommonAdapter<MediaFolderVO>(mActivity, allFolder) {
             @Override
             public int getLayoutIdByType(int viewType) {
                 return R.layout.item_select_photo_folder;
             }
 
             @Override
-            public void bindData(CommonViewHolder holder, int position, PhotoFolderVO photoFolderVO) {
-                holder.setText(R.id.folderTV,photoFolderVO.getName() + "（" + photoFolderVO.getCount() +"）");
-                ImageLoader.getLoader().loadImage((ImageView) holder.getView(R.id.folderIV), photoFolderVO.getCover());
-                holder.setOnItemClickListener(position, photoFolderVO, new CommonViewHolder.OnItemClickListener<PhotoFolderVO>() {
+            public void bindData(CommonViewHolder holder, int position, MediaFolderVO mediaFolderVO) {
+                holder.setText(R.id.folderTV, mediaFolderVO.getName() + "（" + mediaFolderVO.getCount() +"）");
+                ImageLoader.getLoader().loadImage((ImageView) holder.getView(R.id.folderIV), mediaFolderVO.getCoverUri());
+                holder.setOnItemClickListener(position, mediaFolderVO, new CommonViewHolder.OnItemClickListener<MediaFolderVO>() {
                     @Override
-                    public void onItemClick(int position, PhotoFolderVO photoFolderVO1) {
-                        ((SelectPhotoActivity)mActivity).changeToSelectPhotoFragment(photoFolderVO1.getPath(), photoFolderVO1.getName());
+                    public void onItemClick(int position, MediaFolderVO mediaFolderVO1) {
+                        ((SelectPhotoActivity)mActivity).changeToSelectPhotoFragment(mediaFolderVO1.getId(), mediaFolderVO1.getName());
                     }
                 });
             }
@@ -61,18 +65,22 @@ public class SelectPhotoFolderFragment extends BaseFragment {
         getAllPhotoFolder();
     }
 
-    private List<PhotoFolderVO> allFolder = new ArrayList<>();
+    private List<MediaFolderVO> allFolder = new ArrayList<>();
 
     private void getAllPhotoFolder() {
-        ThreadPoolUtils threadPoolUtils = new ThreadPoolUtils(ThreadPoolUtils.Type.SingleThread, 1);
-        threadPoolUtils.execute(new Runnable() {
+        ExecutorService executorService = ThreadUtils.getSinglePool();
+        executorService.execute(new Runnable() {
             @Override
             public void run() {
-                List<PhotoFolderVO> allFolder = PhotoUtils.getAllPhotoFolder(mActivity);
-                List<String> lastPhotos = PhotoUtils.getTheLastPhotos(mActivity, 100);
-                if (lastPhotos != null && !lastPhotos.isEmpty()){
-                    PhotoFolderVO lastPhotoFolderVO = new PhotoFolderVO("", lastPhotos.get(0), "最近照片", lastPhotos.size());
-                    allFolder.add(0, lastPhotoFolderVO);
+                List<MediaFolderVO> allFolder = PhotoUtils.getAllMediasFolder(mActivity);
+                List<MediaVO> lastPhotos = PhotoUtils.getTheLastMedias(mActivity, 100, getMediaType());
+                if (!lastPhotos.isEmpty()){
+                    MediaFolderVO lastMediaFolderVO = new MediaFolderVO();
+                    lastMediaFolderVO.setId("");
+                    lastMediaFolderVO.setCoverUri(lastPhotos.get(0).getUri());
+                    lastMediaFolderVO.setCount(lastPhotos.size());
+                    lastMediaFolderVO.setName("最近照片");
+                    allFolder.add(0, lastMediaFolderVO);
                 }
                 handler.sendMessage(Message.obtain(handler, 101, allFolder));
             }
@@ -85,8 +93,8 @@ public class SelectPhotoFolderFragment extends BaseFragment {
         public boolean handleMessage(Message msg) {
             if (msg.what == 101) {
                 allFolder.clear();
-                if ((List<PhotoFolderVO>) msg.obj != null) {
-                    allFolder.addAll((List<PhotoFolderVO>) msg.obj);
+                if ((List<MediaFolderVO>) msg.obj != null) {
+                    allFolder.addAll((List<MediaFolderVO>) msg.obj);
                 }
                 if (commonAdapter != null) {
                     commonAdapter.setList(allFolder);
@@ -96,4 +104,7 @@ public class SelectPhotoFolderFragment extends BaseFragment {
         }
     });
 
+    private MediaType getMediaType() {
+        return ((SelectPhotoActivity)mActivity).getMediaType();
+    }
 }

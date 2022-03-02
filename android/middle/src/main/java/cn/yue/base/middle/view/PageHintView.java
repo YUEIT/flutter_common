@@ -1,23 +1,27 @@
 package cn.yue.base.middle.view;
 
 import android.content.Context;
-import androidx.annotation.LayoutRes;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-import cn.yue.base.middle.router.FRouter;
+import androidx.annotation.LayoutRes;
+import androidx.core.widget.NestedScrollView;
+
 import cn.yue.base.common.image.ImageLoader;
 import cn.yue.base.middle.R;
+import cn.yue.base.middle.components.load.PageStatus;
+import cn.yue.base.middle.router.FRouter;
+import cn.yue.base.middle.view.refresh.IRefreshLayout;
 
 /**
  * Description :
  * Created by yue on 2018/11/13
  */
 
-public class PageHintView extends RelativeLayout{
+public class PageHintView extends NestedScrollView {
 
     public PageHintView(Context context) {
         this(context, null);
@@ -33,6 +37,7 @@ public class PageHintView extends RelativeLayout{
     }
 
     private void initView(Context context) {
+        setFillViewport(true);
         setClickable(true);
         setDefault(context);
     }
@@ -47,8 +52,6 @@ public class PageHintView extends RelativeLayout{
         noNetView = inflate(context, R.layout.layout_page_hint_no_net, null);
         noDataView = inflate(context, R.layout.layout_page_hint_no_data, null);
         serverErrorView = inflate(context, R.layout.layout_page_hint_server_error, null);
-        ImageView loadingIV = loadingView.findViewById(R.id.loadingIV);
-        ImageLoader.getLoader().loadGif(loadingIV, R.drawable.icon_page_loading);
 
         noNetView.findViewById(R.id.reloadTV).setOnClickListener(new OnClickListener() {
             @Override
@@ -69,7 +72,7 @@ public class PageHintView extends RelativeLayout{
             @Override
             public void onClick(View v) {
                 if (onReloadListener != null) {
-                    onReloadListener.onRefresh();
+                    onReloadListener.onReload();
                 }
             }
         });
@@ -90,7 +93,6 @@ public class PageHintView extends RelativeLayout{
 
     public abstract static class OnReloadListener {
         public abstract void onReload();
-        public void onRefresh(){}
     }
 
     public void setNoNetView(View noNetView) {
@@ -129,6 +131,26 @@ public class PageHintView extends RelativeLayout{
         return view;
     }
 
+    public void show(PageStatus status) {
+        switch (status) {
+            case NORMAL:
+                showSuccess();
+                break;
+            case LOADING:
+                showLoading();
+                break;
+            case NO_NET:
+                showErrorNet();
+                break;
+            case NO_DATA:
+                showErrorNoData();
+                break;
+            case ERROR:
+                showErrorOperation();
+                break;
+        }
+    }
+
     public void showLoading() {
         if (loadingView != null) {
             setVisibility(View.VISIBLE);
@@ -148,7 +170,7 @@ public class PageHintView extends RelativeLayout{
             setVisibility(View.VISIBLE);
             removeAllViews();
             addView(noNetView);
-            setRefreshEnable(false);
+            setRefreshEnable(true);
         }
     }
 
@@ -166,18 +188,17 @@ public class PageHintView extends RelativeLayout{
             setVisibility(View.VISIBLE);
             removeAllViews();
             addView(serverErrorView);
-            setRefreshEnable(false);
         }
     }
 
-    private ViewGroup refreshLayout;
-    public void setRefreshTarget(ViewGroup refreshLayout) {
+    private IRefreshLayout refreshLayout;
+    public void setRefreshTarget(IRefreshLayout refreshLayout) {
         this.refreshLayout = refreshLayout;
     }
 
-    public void setRefreshEnable(boolean enable) {
+    private void setRefreshEnable(boolean enable) {
         if (refreshLayout != null) {
-            refreshLayout.setEnabled(enable);
+            refreshLayout.setEnabledRefresh(enable);
         }
     }
 

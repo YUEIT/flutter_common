@@ -13,9 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.yue.base.common.R;
-import cn.yue.base.common.utils.code.SharePreferencesUtils;
 import cn.yue.base.common.utils.device.KeyboardUtils;
-import cn.yue.base.common.widget.emoji.EmojiConstant;
+import cn.yue.base.common.utils.code.SPUtils;
 import cn.yue.base.common.widget.keyboard.mode.EmotionUtils;
 import cn.yue.base.common.widget.keyboard.mode.IEmotionSort;
 
@@ -40,7 +39,6 @@ public class EmotionLayout extends LinearLayout implements IKeyboard{
 
     private EmotionPageView pageView;
     private void initView(Context context) {
-        EmojiConstant.setContext(context);
         EmotionUtils.initAllEmotion();
         inflate(context, R.layout.layout_emotion_sort, this);
         pageView = findViewById(R.id.emotionPageLayout);
@@ -83,36 +81,20 @@ public class EmotionLayout extends LinearLayout implements IKeyboard{
     }
 
     public void setOnEmotionClickListener(OnEmotionClickListener onEmotionClickListener) {
-        EmotionUtils.setOnEmotionClickListener(onEmotionClickListener);
+        pageView.setOnEmotionClickListener(onEmotionClickListener);
     }
 
     protected final static int MIN_HEIGHT = 50;
 
     private boolean visible;
     public void toggleEmotionShow(EditText editText) {
-        if (keyboardHeight > MIN_HEIGHT) {
-            //键盘弹出状态
-            visible = !visible;
-            if (visible) {
-                KeyboardUtils.hideSoftInput((Activity) getContext());
-            } else {
-                KeyboardUtils.showSoftInput(editText);
-            }
+        visible = !visible;
+        if (visible) {
+            KeyboardUtils.hideSoftInput((Activity) getContext());
         } else {
-            visible = !visible;
-            if (visible) {
-                changeSize(maxKeyboardHeight);
-            } else {
-                KeyboardUtils.showSoftInput(editText);
-            }
+            KeyboardUtils.showSoftInput(editText);
         }
-
-    }
-
-    public void dismissLayout(Context context) {
-        visible = false;
-        changeSize(0);
-        KeyboardUtils.hideSoftInput((Activity) context);
+        changeSize(keyboardHeight);
     }
 
     @Override
@@ -165,13 +147,13 @@ public class EmotionLayout extends LinearLayout implements IKeyboard{
     public void setMaxKeyboardHeight(int keyboardHeight) {
         if (keyboardHeight > maxKeyboardHeight) {
             this.maxKeyboardHeight = keyboardHeight;
-            SharePreferencesUtils.getInstance().put("keyboardHeight", keyboardHeight);
+            SPUtils.getInstance().put("keyboardHeight", keyboardHeight);
         }
     }
 
     public int getMaxKeyboardHeight() {
         if (maxKeyboardHeight < MIN_HEIGHT) {
-            return SharePreferencesUtils.getInstance().getInt("keyboardHeight");
+            return SPUtils.getInstance().getInt("keyboardHeight");
         }
         return maxKeyboardHeight;
     }
@@ -180,7 +162,7 @@ public class EmotionLayout extends LinearLayout implements IKeyboard{
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         //此方法较慢于组件的destroy
-        EmotionUtils.clearAllEmotion(getContext());
+        EmotionUtils.clearAllEmotion();
     }
 
 }

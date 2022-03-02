@@ -13,12 +13,13 @@ import com.alibaba.android.arouter.launcher.ARouter;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import cn.yue.base.common.Constant;
 import cn.yue.base.common.activity.BaseFragmentActivity;
 import cn.yue.base.common.activity.PermissionCallBack;
 import cn.yue.base.common.utils.app.RunTimePermissionUtil;
-import cn.yue.base.common.utils.debug.ToastUtils;
-import cn.yue.base.common.utils.file.BitmapFileUtil;
+import cn.yue.base.common.utils.view.ToastUtils;
 import cn.yue.base.middle.net.ResultException;
 import cn.yue.base.middle.net.observer.BaseUploadObserver;
 import cn.yue.base.middle.net.upload.ImageResult;
@@ -102,13 +103,8 @@ public class PhotoHelper {
         RunTimePermissionUtil.requestPermissions((BaseFragmentActivity) context, new PermissionCallBack() {
             @Override
             public void requestSuccess(String permission) {
-                String cachePath = BitmapFileUtil.getPhotoCameraPath();
-                if (TextUtils.isEmpty(cachePath)) {
-                    ToastUtils.showShortToast("无可用空间存储相片");
-                    return;
-                }
                 // 允许用户上传多张拍摄图片
-                File tempFile = BitmapFileUtil.createRandomFile();
+                File tempFile = createRandomFile();
                 cachePhotoPath = tempFile.getAbsolutePath();
                 targetUri = Uri.fromFile(tempFile);
                 if (targetUri != null) {
@@ -138,11 +134,11 @@ public class PhotoHelper {
         Uri outPutUri;
         if (cachePhotoPath != null) {
             targetUri = Uri.fromFile(new File(cachePhotoPath));
-            File tempFile = BitmapFileUtil.createRandomFile();
+            File tempFile = createRandomFile();
             cachePhotoPath = tempFile.getAbsolutePath();
             outPutUri = Uri.fromFile(tempFile);
         } else {
-            ToastUtils.showShortToast("没有裁剪的图片~");
+            ToastUtils.showShort("没有裁剪的图片~");
             return;
         }
         Intent intent = new Intent("com.android.camera.action.CROP");
@@ -160,6 +156,17 @@ public class PhotoHelper {
         context.startActivityForResult(intent, REQUEST_CROP_PHOTO);
     }
 
+    private File createRandomFile(){
+        String storePath = Constant.getCachePath();
+        File appDir = new File(storePath);
+        if (!appDir.exists()) {
+            appDir.mkdirs();
+        }
+        String uuid = UUID.randomUUID().toString();
+        File tempFile = new File(storePath, uuid + ".jpg");
+        return tempFile;
+    }
+
     public void upload() {
         upload(cachePhotoPath);
     }
@@ -171,7 +178,7 @@ public class PhotoHelper {
     }
 
     public void upload(List<String> imageList) {
-        UploadUtils.upload(imageList, iPhotoView, new BaseUploadObserver() {
+        UploadUtils.upload(imageList, iPhotoView.getLifecycleProvider(), new BaseUploadObserver() {
 
             @Override
             protected void onStart() {
@@ -182,13 +189,13 @@ public class PhotoHelper {
             @Override
             public void onException(ResultException e) {
                 iPhotoView.dismissWaitDialog();
-                ToastUtils.showShortToast("上传失败：" + e.getMessage());
+                ToastUtils.showShort("上传失败：" + e.getMessage());
             }
 
             @Override
             public void onSuccess(List<ImageResult> imageList) {
                 iPhotoView.dismissWaitDialog();
-                ToastUtils.showShortToast("上传成功~");
+                ToastUtils.showShort("上传成功~");
                 List<String> serverList = new ArrayList<>();
                 for (ImageResult imageResult : imageList) {
                     serverList.add(imageResult.getUrl());

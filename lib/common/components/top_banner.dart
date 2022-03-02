@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_boost/boost_navigator.dart';
+import 'package:flutter_boost/flutter_boost.dart';
 import 'package:flutter_common/common/utils/dimens_extension.dart';
 import 'package:flutter_common/common/constant/colors.dart';
 
@@ -32,7 +32,7 @@ class TopBanner extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _close(BuildContext context) {
-    BoostNavigator.of().pop();
+    BoostNavigator.instance.pop();
   }
 
   @override

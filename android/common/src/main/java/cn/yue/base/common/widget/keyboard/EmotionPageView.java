@@ -79,4 +79,8 @@ public class EmotionPageView extends LinearLayout {
     public void setOnPageChangeListener(OnPageChangeListener onPageChangeListener) {
         this.onPageChangeListener = onPageChangeListener;
     }
+
+    public void setOnEmotionClickListener(OnEmotionClickListener onEmotionClickListener) {
+        emotionPageAdapter.setOnEmotionClickListener(onEmotionClickListener);
+    }
 }

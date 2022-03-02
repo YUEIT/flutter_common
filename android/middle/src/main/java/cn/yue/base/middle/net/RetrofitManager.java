@@ -4,6 +4,7 @@ package cn.yue.base.middle.net;
 import java.util.concurrent.TimeUnit;
 
 import cn.yue.base.middle.init.InitConstant;
+import cn.yue.base.middle.net.convert.GsonResponseConverterFactory;
 import cn.yue.base.middle.net.convert.SignGsonConverterFactory;
 import cn.yue.base.middle.net.intercept.NoNetInterceptor;
 import cn.yue.base.middle.net.intercept.ParamInterceptor;
@@ -40,7 +41,7 @@ public class RetrofitManager {
         builder.connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
         builder.readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
         builder.writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
-        if (InitConstant.logMode) {
+        if (InitConstant.isDebug()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addInterceptor(logging);
@@ -60,7 +61,7 @@ public class RetrofitManager {
         builder.connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
         builder.readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
         builder.writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
-        if (InitConstant.logMode) {
+        if (InitConstant.isDebug()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addInterceptor(logging);
@@ -112,7 +113,7 @@ public class RetrofitManager {
                 .client(builder.build())
                 .baseUrl(baseUrl)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(SignGsonConverterFactory.create())
+                .addConverterFactory(GsonResponseConverterFactory.create())
                 .build();
     }
 
@@ -126,9 +127,10 @@ public class RetrofitManager {
                 .client(builder.build())
                 .baseUrl(baseUrl)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(SignGsonConverterFactory.create())
+                .addConverterFactory(GsonResponseConverterFactory.create())
                 .build();
     }
+
     // 查看CallObservable的subscribeActual方法可知，一般情况下异常会被“observer.onError(t);”中处理
     // 但是如果是onError中抛出的异常，会调用RxJavaPlugins.onError方法，所有这里实现Consumer<Throwable>接口，并让异常在accept中处理
     // 考虑到ResultException是自定义异常，并不能让APP闪退，这里拦截，如果是其他异常直接抛出。

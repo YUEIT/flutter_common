@@ -8,6 +8,10 @@ import androidx.annotation.NonNull;
 import cn.yue.base.middle.module.IFlutterModule;
 import cn.yue.base.middle.module.manager.ModuleManager;
 
+/**
+ * Description : 跨平台路由 支持Flutter页面跳转
+ * Created by yue on 2020/4/22
+ */
 public class PlatformRouter implements INavigation {
 
     private static class PlatformRouterHolder {
@@ -22,7 +26,6 @@ public class PlatformRouter implements INavigation {
     private RouterCard routerCard;
 
     public synchronized RouterCard build(String pactUrl) {
-        //
         if (pactUrl.startsWith(IRouterPath.FLUTTER)) {
             navigation = ModuleManager.getModuleService(IFlutterModule.class).getFlutterRouter();
         } else if (pactUrl.startsWith(IRouterPath.NATIVE)) {
@@ -35,35 +38,31 @@ public class PlatformRouter implements INavigation {
     }
 
     @Override
-    public void bindRouterCard(RouterCard routerCard) {
+    public INavigation bindRouterCard(RouterCard routerCard) {
         this.routerCard = routerCard;
+        this.routerCard.setNavigationImpl(this);
+        return this;
     }
 
     @Override
-    public void navigation(Context context) {
+    public void navigation(@NonNull Context context) {
         if (navigation != null) {
             navigation.navigation(context);
         }
     }
 
     @Override
-    public void navigation(@NonNull Context context, Class toActivity) {
-        if (navigation != null) {
-            navigation.navigation(context, toActivity);
-        }
-    }
-
-    @Override
-    public void navigation(Activity context, int requestCode) {
+    public void navigation(@NonNull Context context, int requestCode) {
         if (navigation != null) {
             navigation.navigation(context, requestCode);
         }
     }
 
     @Override
-    public void navigation(@NonNull Activity context, Class toActivity, int requestCode) {
+    public void navigation(@NonNull Context context, int requestCode, String toActivity) {
         if (navigation != null) {
-            navigation.navigation(context, toActivity, requestCode);
+            navigation.navigation(context, requestCode, toActivity);
         }
     }
+
 }

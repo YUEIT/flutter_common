@@ -1,131 +1,140 @@
 package cn.yue.base.common.utils.debug;
 
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
+import android.annotation.SuppressLint;
 import android.os.Build;
-import android.os.Environment;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
+
+import androidx.annotation.NonNull;
 
 import cn.yue.base.common.utils.Utils;
-import cn.yue.base.common.utils.file.FileUtils;
+import cn.yue.base.common.utils.UtilsBridge;
+
 
 /**
- * Description : 崩溃相关工具类
- * Created by yue on 2019/3/11
+ * <pre>
+ *     author: Blankj
+ *     blog  : http://blankj.com
+ *     time  : 2016/09/27
+ *     desc  : utils about crash
+ * </pre>
  */
-public class CrashUtils
-        implements UncaughtExceptionHandler {
+public final class CrashUtils {
 
-    private volatile static CrashUtils mInstance;
+    private static final String FILE_SEP = System.getProperty("file.separator");
 
-    private UncaughtExceptionHandler mHandler;
-
-    private boolean mInitialized;
-    private String  crashDir;
-    private String  versionName;
-    private int     versionCode;
+    private static final UncaughtExceptionHandler DEFAULT_UNCAUGHT_EXCEPTION_HANDLER = Thread.getDefaultUncaughtExceptionHandler();
 
     private CrashUtils() {
+        throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
     /**
-     * 获取单例
-     * <p>在Application中初始化{@code CrashUtils.getInstance().init(this);}</p>
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>}</p>
-     *
-     * @return 单例
+     * Initialization.
      */
-    public static CrashUtils getInstance() {
-        if (mInstance == null) {
-            synchronized (CrashUtils.class) {
-                if (mInstance == null) {
-                    mInstance = new CrashUtils();
-                }
+    @SuppressLint("MissingPermission")
+    public static void init() {
+        init("");
+    }
+
+    /**
+     * Initialization
+     *
+     * @param crashDir The directory of saving crash information.
+     */
+    public static void init(@NonNull final File crashDir) {
+        init(crashDir.getAbsolutePath(), null);
+    }
+
+    /**
+     * Initialization
+     *
+     * @param crashDirPath The directory's path of saving crash information.
+     */
+    public static void init(final String crashDirPath) {
+        init(crashDirPath, null);
+    }
+
+    /**
+     * Initialization
+     *
+     * @param onCrashListener The crash listener.
+     */
+    public static void init(final OnCrashListener onCrashListener) {
+        init("", onCrashListener);
+    }
+
+    /**
+     * Initialization
+     *
+     * @param crashDir        The directory of saving crash information.
+     * @param onCrashListener The crash listener.
+     */
+    public static void init(@NonNull final File crashDir, final OnCrashListener onCrashListener) {
+        init(crashDir.getAbsolutePath(), onCrashListener);
+    }
+
+    /**
+     * Initialization
+     *
+     * @param crashDirPath    The directory's path of saving crash information.
+     * @param onCrashListener The crash listener.
+     */
+    public static void init(final String crashDirPath, final OnCrashListener onCrashListener) {
+        String dirPath;
+        if (UtilsBridge.isSpace(crashDirPath)) {
+            if (UtilsBridge.isSDCardEnableByEnvironment()
+                    && Utils.getApp().getExternalFilesDir(null) != null)
+                dirPath = Utils.getApp().getExternalFilesDir(null) + FILE_SEP + "crash" + FILE_SEP;
+            else {
+                dirPath = Utils.getApp().getFilesDir() + FILE_SEP + "crash" + FILE_SEP;
             }
-        }
-        return mInstance;
-    }
-
-    /**
-     * 初始化
-     *
-     * @return {@code true}: 成功<br>{@code false}: 失败
-     */
-    public boolean init() {
-        if (mInitialized) return true;
-        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            File baseCache = Utils.getContext().getExternalCacheDir();
-            if (baseCache == null) return false;
-            crashDir = baseCache.getPath() + File.separator + "crash" + File.separator;
         } else {
-            File baseCache = Utils.getContext().getCacheDir();
-            if (baseCache == null) return false;
-            crashDir = baseCache.getPath() + File.separator + "crash" + File.separator;
+            dirPath = crashDirPath.endsWith(FILE_SEP) ? crashDirPath : crashDirPath + FILE_SEP;
         }
-        try {
-            PackageInfo pi = Utils.getContext().getPackageManager().getPackageInfo(Utils.getContext().getPackageName(), 0);
-            versionName = pi.versionName;
-            versionCode = pi.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        }
-        mHandler = Thread.getDefaultUncaughtExceptionHandler();
-        Thread.setDefaultUncaughtExceptionHandler(this);
-        return mInitialized = true;
+        Thread.setDefaultUncaughtExceptionHandler(getUncaughtExceptionHandler(dirPath, onCrashListener));
     }
 
-    @Override
-    public void uncaughtException(Thread thread, final Throwable throwable) {
-        String now = new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-        final String fullPath = crashDir + now + ".txt";
-        if (!FileUtils.createOrExistsFile(fullPath)) return;
-        new Thread(new Runnable() {
+    private static UncaughtExceptionHandler getUncaughtExceptionHandler(final String dirPath,
+                                                                        final OnCrashListener onCrashListener) {
+        return new UncaughtExceptionHandler() {
             @Override
-            public void run() {
-                PrintWriter pw = null;
-                try {
-                    pw = new PrintWriter(new FileWriter(fullPath, false));
-                    pw.write(getCrashHead());
-                    throwable.printStackTrace(pw);
-                    Throwable cause = throwable.getCause();
-                    while (cause != null) {
-                        cause.printStackTrace(pw);
-                        cause = cause.getCause();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    CloseUtils.closeIO(pw);
+            public void uncaughtException(@NonNull final Thread t, @NonNull final Throwable e) {
+                final String time = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());
+                final StringBuilder sb = new StringBuilder();
+                final String head = "************* Log Head ****************" +
+                        "\nTime Of Crash      : " + time +
+                        "\nDevice Manufacturer: " + Build.MANUFACTURER +
+                        "\nDevice Model       : " + Build.MODEL +
+                        "\nAndroid Version    : " + Build.VERSION.RELEASE +
+                        "\nAndroid SDK        : " + Build.VERSION.SDK_INT +
+                        "\nApp VersionName    : " + UtilsBridge.getAppVersionName() +
+                        "\nApp VersionCode    : " + UtilsBridge.getAppVersionCode() +
+                        "\n************* Log Head ****************\n\n";
+                sb.append(head).append(UtilsBridge.getFullStackTrace(e));
+                final String crashInfo = sb.toString();
+                final String crashFile = dirPath + time + ".txt";
+                UtilsBridge.writeFileFromString(crashFile, crashInfo, true);
+
+                if (onCrashListener != null) {
+                    onCrashListener.onCrash(crashInfo, e);
+                }
+
+                if (DEFAULT_UNCAUGHT_EXCEPTION_HANDLER != null) {
+                    DEFAULT_UNCAUGHT_EXCEPTION_HANDLER.uncaughtException(t, e);
                 }
             }
-        }).start();
-        if (mHandler != null) {
-            mHandler.uncaughtException(thread, throwable);
-        }
+        };
     }
 
-    /**
-     * 获取崩溃头
-     *
-     * @return 崩溃头
-     */
-    private String getCrashHead() {
-        return "\n************* Crash Log Head ****************" +
-                "\nDevice Manufacturer: " + Build.MANUFACTURER +// 设备厂商
-                "\nDevice Model       : " + Build.MODEL +// 设备型号
-                "\nAndroid Version    : " + Build.VERSION.RELEASE +// 系统版本
-                "\nAndroid SDK        : " + Build.VERSION.SDK_INT +// SDK版本
-                "\nApp VersionName    : " + versionName +
-                "\nApp VersionCode    : " + versionCode +
-                "\n************* Crash Log Head ****************\n\n";
+    ///////////////////////////////////////////////////////////////////////////
+    // interface
+    ///////////////////////////////////////////////////////////////////////////
+
+    public interface OnCrashListener {
+        void onCrash(String crashInfo, Throwable e);
     }
 }

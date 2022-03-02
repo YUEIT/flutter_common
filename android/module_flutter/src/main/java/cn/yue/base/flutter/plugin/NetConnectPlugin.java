@@ -45,13 +45,13 @@ public class NetConnectPlugin implements FlutterPlugin, MethodChannel.MethodCall
     public void onMethodCall(MethodCall call, @NonNull MethodChannel.Result result) {
         switch (call.method) {
             case "isNetConnect":
-                result.success(NetworkUtils.isNetworkAvailable());
+                result.success(NetworkUtils.isConnected());
                 break;
             case "isWifi":
-                result.success(NetworkUtils.isWifi());
+                result.success(NetworkUtils.isWifiConnected());
                 break;
             case "isMobile" :
-                result.success(NetworkUtils.isMobile());
+                result.success(NetworkUtils.isMobileData());
                 break;
             default:
                 result.notImplemented();

@@ -7,29 +7,29 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.gson.reflect.TypeToken;
-
 import java.io.Serializable;
-import java.nio.BufferUnderflowException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import cn.yue.base.common.activity.TransitionAnimation;
-import cn.yue.base.common.utils.code.TypeUtils;
+import cn.yue.base.common.utils.debug.LogUtils;
 
+/**
+ * Description : 路由数据
+ * Created by yue on 2020/4/22
+ */
 public class RouterCard implements INavigation, Parcelable{
+
+    public static final String TAG = "RouterCard";
 
     private Uri uri;
     private Object tag;
-    private Bundle mBundle;
+    private Bundle mBundle = new Bundle();
 
     private String pactUrl;
     private String path;
@@ -37,16 +37,15 @@ public class RouterCard implements INavigation, Parcelable{
     private int timeout;
     private int enterAnim;
     private int exitAnim;
-    private int transition; //入场方式
-    private boolean isInterceptLogin; //是否登录拦截
+    //入场方式
+    private int transition;
+    //是否登录拦截
+    private boolean isInterceptLogin;
     private INavigation navigation;
 
-    public RouterCard(@NonNull INavigation navigation) {
-        this.flags = -1;
-        this.timeout = 300;
-        this.mBundle = new Bundle();
-        this.isInterceptLogin = false;
-        this.transition = 0;
+    public RouterCard() { }
+
+    public RouterCard(INavigation navigation) {
         this.navigation = navigation;
     }
 
@@ -135,7 +134,7 @@ public class RouterCard implements INavigation, Parcelable{
                 path = "/" + split[1];
             }
         }
-        Log.d("luobiao", "getPath: " + path);
+        LogUtils.i("router path: " + path);
         return path;
     }
 
@@ -291,14 +290,6 @@ public class RouterCard implements INavigation, Parcelable{
         return this;
     }
 
-    public RouterCard withMapString(Map<String, String> map) {
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            withString(entry.getKey(), entry.getValue());
-        }
-        return this;
-    }
-
-
     private void putObject(String key, Object object) {
         if (object == null) {
             return;
@@ -392,7 +383,10 @@ public class RouterCard implements INavigation, Parcelable{
 
     protected RouterCard(Parcel in) {
         uri = in.readParcelable(Uri.class.getClassLoader());
-        mBundle = in.readBundle();
+        mBundle = in.readBundle(Bundle.class.getClassLoader());
+        if (mBundle == null) {
+            mBundle = new Bundle();
+        }
         path = in.readString();
         flags = in.readInt();
         timeout = in.readInt();
@@ -415,35 +409,29 @@ public class RouterCard implements INavigation, Parcelable{
     };
 
     @Override
-    public void bindRouterCard(RouterCard routerCard) {
-
+    public INavigation bindRouterCard(RouterCard routerCard) {
+        return null;
     }
 
     @Override
-    public void navigation(Context context) {
+    public void navigation(@NonNull Context context) {
         if (navigation != null) {
             navigation.navigation(context);
         }
     }
 
     @Override
-    public void navigation(@NonNull Context context, Class toActivity) {
-        if (navigation != null) {
-            navigation.navigation(context, toActivity);
-        }
-    }
-
-    @Override
-    public void navigation(Activity context, int requestCode) {
+    public void navigation(@NonNull Context context, int requestCode) {
         if (navigation != null) {
             navigation.navigation(context, requestCode);
         }
     }
 
     @Override
-    public void navigation(@NonNull Activity context, Class toActivity, int requestCode) {
+    public void navigation(@NonNull Context context, int requestCode, String toActivity) {
         if (navigation != null) {
-            navigation.navigation(context, toActivity, requestCode);
+            navigation.navigation(context, requestCode, toActivity);
         }
     }
+
 }

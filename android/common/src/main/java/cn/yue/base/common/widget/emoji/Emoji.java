@@ -1,51 +1,22 @@
 package cn.yue.base.common.widget.emoji;
 
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import cn.yue.base.common.widget.keyboard.mode.IEmotion;
+public class Emoji {
 
-/**
- * Description : emoji表情
- * Created by yue on 2019/3/11
- */
+    private static List<EmojiEmotion> emojiEmotions;
 
-public class Emoji implements Serializable, IEmotion {
-
-    private int icon;
-    private String emoji;   // http: gif
-    private int type = 0;
-
-    public int getIcon() {
-        return icon;
+    public static List<EmojiEmotion> getEmojiList() {
+        if (null == emojiEmotions) {
+            emojiEmotions = new ArrayList<>();
+            emojiEmotions.addAll(Arrays.asList(DATA));
+        }
+        return emojiEmotions;
     }
 
-    public void setIcon(int icon) {
-        this.icon = icon;
-    }
-
-    public String getEmoji() {
-        return emoji;
-    }
-
-    public void setEmoji(String emoji) {
-        this.emoji = emoji;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    @Override
-    public int getImageResId() {
-        return icon;
-    }
-
-    @Override
-    public String getImageUrl() {
-        return emoji;
-    }
+    private static EmojiEmotion[] DATA = new EmojiEmotion[] {
+            EmojiEmotion.fromCodePoint(0x1f642),
+    };
 }

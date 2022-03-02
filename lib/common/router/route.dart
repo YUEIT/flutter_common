@@ -18,7 +18,7 @@ class ARouteAlias {
 }
 
 class ARouteOption {
-  String uniqueId;
+  String? uniqueId;
   String urlPattern;
   Map<String, dynamic> params;
   ARouteOption(this.urlPattern, this.params, this.uniqueId);

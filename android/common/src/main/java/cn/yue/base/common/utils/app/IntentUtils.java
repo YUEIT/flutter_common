@@ -2,302 +2,460 @@ package cn.yue.base.common.utils.app;
 
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.Settings;
+import androidx.annotation.RequiresPermission;
 import androidx.core.content.FileProvider;
-import android.webkit.MimeTypeMap;
+
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import cn.yue.base.common.utils.Utils;
-import cn.yue.base.common.utils.file.FileUtils;
+import cn.yue.base.common.utils.UtilsBridge;
+
+import static android.Manifest.permission.CALL_PHONE;
 
 /**
- * Description :
- * Created by yue on 2019/3/11
+ * <pre>
+ *     author: Blankj
+ *     blog  : http://blankj.com
+ *     time  : 2016/09/23
+ *     desc  : utils about intent
+ * </pre>
  */
-public class IntentUtils {
+public final class IntentUtils {
 
     private IntentUtils() {
-        throw new UnsupportedOperationException("u can't fuck me...");
+        throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
     /**
-     * 获取安装App（支持6.0）的意图
+     * Return whether the intent is available.
      *
-     * @param filePath 文件路径
-     * @return intent
+     * @param intent The intent.
+     * @return {@code true}: yes<br>{@code false}: no
      */
-    public static Intent getInstallAppIntent(String filePath) {
-        return getInstallAppIntent(FileUtils.getFileByPath(filePath));
+    public static boolean isIntentAvailable(final Intent intent) {
+        return Utils.getApp()
+                .getPackageManager()
+                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                .size() > 0;
     }
 
     /**
-     * 获取安装App(支持6.0)的意图
+     * Return the intent of install app.
+     * <p>Target APIs greater than 25 must hold
+     * {@code <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />}</p>
      *
-     * @param file 文件
-     * @return intent
+     * @param filePath The path of file.
+     * @return the intent of install app
      */
-    public static Intent getInstallAppIntent(File file) {
-        if (file == null) return null;
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        String type;
+    public static Intent getInstallAppIntent(final String filePath) {
+        return getInstallAppIntent(UtilsBridge.getFileByPath(filePath));
+    }
 
-        if (Build.VERSION.SDK_INT < 23) {
-            type = "application/vnd.android.package-archive";
+    /**
+     * Return the intent of install app.
+     * <p>Target APIs greater than 25 must hold
+     * {@code <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />}</p>
+     *
+     * @param file The file.
+     * @return the intent of install app
+     */
+    public static Intent getInstallAppIntent(final File file) {
+        if (!UtilsBridge.isFileExists(file)) return null;
+        Uri uri;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            uri = Uri.fromFile(file);
         } else {
-            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(FileUtils.getFileExtension(file));
+            String authority = Utils.getApp().getPackageName() + ".utilcode.provider";
+            uri = FileProvider.getUriForFile(Utils.getApp(), authority, file);
         }
+        return getInstallAppIntent(uri);
+    }
+
+    /**
+     * Return the intent of install app.
+     * <p>Target APIs greater than 25 must hold
+     * {@code <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />}</p>
+     *
+     * @param uri The uri.
+     * @return the intent of install app
+     */
+    public static Intent getInstallAppIntent(final Uri uri) {
+        if (uri == null) return null;
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        String type = "application/vnd.android.package-archive";
+        intent.setDataAndType(uri, type);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            Uri contentUri = FileProvider.getUriForFile(Utils.getContext(), "com.your.package.fileProvider", file);
-            intent.setDataAndType(contentUri, type);
         }
-        intent.setDataAndType(Uri.fromFile(file), type);
         return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
     /**
-     * 获取卸载App的意图
+     * Return the intent of uninstall app.
+     * <p>Target APIs greater than 25 must hold
+     * Must hold {@code <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />}</p>
      *
-     * @param packageName 包名
-     * @return intent
+     * @param pkgName The name of the package.
+     * @return the intent of uninstall app
      */
-    public static Intent getUninstallAppIntent(String packageName) {
+    public static Intent getUninstallAppIntent(final String pkgName) {
         Intent intent = new Intent(Intent.ACTION_DELETE);
-        intent.setData(Uri.parse("package:" + packageName));
+        intent.setData(Uri.parse("package:" + pkgName));
         return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
     /**
-     * 获取打开App的意图
+     * Return the intent of launch app.
      *
-     * @param packageName 包名
-     * @return intent
+     * @param pkgName The name of the package.
+     * @return the intent of launch app
      */
-    public static Intent getLaunchAppIntent(String packageName) {
-        return Utils.getContext().getPackageManager().getLaunchIntentForPackage(packageName);
-    }
-
-    /**
-     * 获取App具体设置的意图
-     *
-     * @param packageName 包名
-     * @return intent
-     */
-    public static Intent getAppDetailsSettingsIntent(String packageName) {
-        Intent intent = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS");
-        intent.setData(Uri.parse("package:" + packageName));
+    public static Intent getLaunchAppIntent(final String pkgName) {
+        String launcherActivity = UtilsBridge.getLauncherActivity(pkgName);
+        if (UtilsBridge.isSpace(launcherActivity)) return null;
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent.setClassName(pkgName, launcherActivity);
         return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
     /**
-     * 获取分享文本的意图
+     * Return the intent of launch app details settings.
      *
-     * @param content 分享文本
-     * @return intent
+     * @param pkgName The name of the package.
+     * @return the intent of launch app details settings
      */
-    public static Intent getShareTextIntent(String content) {
+    public static Intent getLaunchAppDetailsSettingsIntent(final String pkgName) {
+        return getLaunchAppDetailsSettingsIntent(pkgName, false);
+    }
+
+    /**
+     * Return the intent of launch app details settings.
+     *
+     * @param pkgName The name of the package.
+     * @return the intent of launch app details settings
+     */
+    public static Intent getLaunchAppDetailsSettingsIntent(final String pkgName, final boolean isNewTask) {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + pkgName));
+        return getIntent(intent, isNewTask);
+    }
+
+    /**
+     * Return the intent of share text.
+     *
+     * @param content The content.
+     * @return the intent of share text
+     */
+
+    public static Intent getShareTextIntent(final String content) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, content);
-        return intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return getIntent(intent, true);
     }
 
     /**
-     * 获取分享图片的意图
+     * Return the intent of share image.
      *
-     * @param content   文本
-     * @param imagePath 图片文件路径
-     * @return intent
+     * @param content   The content.
+     * @param imagePath The path of image.
+     * @return the intent of share image
      */
-    public static Intent getShareImageIntent(String content, String imagePath) {
-        return getShareImageIntent(content, FileUtils.getFileByPath(imagePath));
+    public static Intent getShareImageIntent(final String content, final String imagePath) {
+        if (UtilsBridge.isSpace(imagePath)) return null;
+        return getShareImageIntent(content, new File(imagePath));
     }
 
     /**
-     * 获取分享图片的意图
+     * Return the intent of share image.
      *
-     * @param content 文本
-     * @param image   图片文件
-     * @return intent
+     * @param content The content.
+     * @param image   The file of image.
+     * @return the intent of share image
      */
-    public static Intent getShareImageIntent(String content, File image) {
-        if (!FileUtils.isFileExists(image)) return null;
-        return getShareImageIntent(content, Uri.fromFile(image));
+    public static Intent getShareImageIntent(final String content, final File image) {
+        if (image == null || !image.isFile()) return null;
+        return getShareImageIntent(content, UtilsBridge.file2Uri(image));
     }
 
     /**
-     * 获取分享图片的意图
+     * Return the intent of share image.
      *
-     * @param content 分享文本
-     * @param uri     图片uri
-     * @return intent
+     * @param content The content.
+     * @param uri     The uri of image.
+     * @return the intent of share image
      */
-    public static Intent getShareImageIntent(String content, Uri uri) {
+    public static Intent getShareImageIntent(final String content, final Uri uri) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.putExtra(Intent.EXTRA_TEXT, content);
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         intent.setType("image/*");
-        return intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return getIntent(intent, true);
     }
 
     /**
-     * 获取其他应用组件的意图
+     * Return the intent of share images.
      *
-     * @param packageName 包名
-     * @param className   全类名
-     * @return intent
+     * @param content    The content.
+     * @param imagePaths The paths of images.
+     * @return the intent of share images
      */
-    public static Intent getComponentIntent(String packageName, String className) {
-        return getComponentIntent(packageName, className, null);
+    public static Intent getShareImageIntent(final String content,
+                                             final LinkedList<String> imagePaths) {
+        if (imagePaths == null || imagePaths.isEmpty()) return null;
+        List<File> files = new ArrayList<>();
+        for (String imagePath : imagePaths) {
+            files.add(new File(imagePath));
+        }
+        return getShareImageIntent(content, files);
     }
 
     /**
-     * 获取其他应用组件的意图
+     * Return the intent of share images.
      *
-     * @param packageName 包名
-     * @param className   全类名
-     * @param bundle      bundle
-     * @return intent
+     * @param content The content.
+     * @param images  The files of images.
+     * @return the intent of share images
      */
-    public static Intent getComponentIntent(String packageName, String className, Bundle bundle) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
+    public static Intent getShareImageIntent(final String content, final List<File> images) {
+        if (images == null || images.isEmpty()) return null;
+        ArrayList<Uri> uris = new ArrayList<>();
+        for (File image : images) {
+            if (!image.isFile()) continue;
+            uris.add(UtilsBridge.file2Uri(image));
+        }
+        return getShareImageIntent(content, uris);
+    }
+
+    /**
+     * Return the intent of share images.
+     *
+     * @param content The content.
+     * @param uris    The uris of image.
+     * @return the intent of share image
+     */
+    public static Intent getShareImageIntent(final String content, final ArrayList<Uri> uris) {
+        Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+        intent.putExtra(Intent.EXTRA_TEXT, content);
+        intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+        intent.setType("image/*");
+        return getIntent(intent, true);
+    }
+
+    /**
+     * Return the intent of component.
+     *
+     * @param pkgName   The name of the package.
+     * @param className The name of class.
+     * @return the intent of component
+     */
+    public static Intent getComponentIntent(final String pkgName, final String className) {
+        return getComponentIntent(pkgName, className, null, false);
+    }
+
+    /**
+     * Return the intent of component.
+     *
+     * @param pkgName   The name of the package.
+     * @param className The name of class.
+     * @param isNewTask True to add flag of new task, false otherwise.
+     * @return the intent of component
+     */
+    public static Intent getComponentIntent(final String pkgName,
+                                            final String className,
+                                            final boolean isNewTask) {
+        return getComponentIntent(pkgName, className, null, isNewTask);
+    }
+
+    /**
+     * Return the intent of component.
+     *
+     * @param pkgName   The name of the package.
+     * @param className The name of class.
+     * @param bundle    The Bundle of extras to add to this intent.
+     * @return the intent of component
+     */
+    public static Intent getComponentIntent(final String pkgName,
+                                            final String className,
+                                            final Bundle bundle) {
+        return getComponentIntent(pkgName, className, bundle, false);
+    }
+
+    /**
+     * Return the intent of component.
+     *
+     * @param pkgName   The name of the package.
+     * @param className The name of class.
+     * @param bundle    The Bundle of extras to add to this intent.
+     * @param isNewTask True to add flag of new task, false otherwise.
+     * @return the intent of component
+     */
+    public static Intent getComponentIntent(final String pkgName,
+                                            final String className,
+                                            final Bundle bundle,
+                                            final boolean isNewTask) {
+        Intent intent = new Intent();
         if (bundle != null) intent.putExtras(bundle);
-        ComponentName cn = new ComponentName(packageName, className);
+        ComponentName cn = new ComponentName(pkgName, className);
         intent.setComponent(cn);
-        return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return getIntent(intent, isNewTask);
     }
 
     /**
-     * 获取关机的意图
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.SHUTDOWN"/>}</p>
+     * Return the intent of shutdown.
+     * <p>Requires root permission
+     * or hold {@code android:sharedUserId="android.uid.system"},
+     * {@code <uses-permission android:name="android.permission.SHUTDOWN" />}
+     * in manifest.</p>
      *
-     * @return intent
+     * @return the intent of shutdown
      */
     public static Intent getShutdownIntent() {
-        Intent intent = new Intent(Intent.ACTION_SHUTDOWN);
+        Intent intent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent = new Intent(Intent.ACTION_SHUTDOWN);
+        } else {
+            intent = new Intent("com.android.internal.intent.action.REQUEST_SHUTDOWN");
+        }
+        intent.putExtra("android.intent.extra.KEY_CONFIRM", false);
         return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
     /**
-     * 获取跳至拨号界面意图
+     * Return the intent of dial.
      *
-     * @param phoneNumber 电话号码
+     * @param phoneNumber The phone number.
+     * @return the intent of dial
      */
-    public static Intent getDialIntent(String phoneNumber) {
+    public static Intent getDialIntent(final String phoneNumber) {
         Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneNumber));
-        return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return getIntent(intent, true);
     }
 
     /**
-     * 获取拨打电话意图
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.CALL_PHONE"/>}</p>
+     * Return the intent of call.
+     * <p>Must hold {@code <uses-permission android:name="android.permission.CALL_PHONE" />}</p>
      *
-     * @param phoneNumber 电话号码
+     * @param phoneNumber The phone number.
+     * @return the intent of call
      */
-    public static Intent getCallIntent(String phoneNumber) {
+    @RequiresPermission(CALL_PHONE)
+    public static Intent getCallIntent(final String phoneNumber) {
         Intent intent = new Intent("android.intent.action.CALL", Uri.parse("tel:" + phoneNumber));
-        return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return getIntent(intent, true);
     }
 
     /**
-     * 获取跳至发送短信界面的意图
+     * Return the intent of send SMS.
      *
-     * @param phoneNumber 接收号码
-     * @param content     短信内容
+     * @param phoneNumber The phone number.
+     * @param content     The content of SMS.
+     * @return the intent of send SMS
      */
-    public static Intent getSendSmsIntent(String phoneNumber, String content) {
+    public static Intent getSendSmsIntent(final String phoneNumber, final String content) {
         Uri uri = Uri.parse("smsto:" + phoneNumber);
         Intent intent = new Intent(Intent.ACTION_SENDTO, uri);
         intent.putExtra("sms_body", content);
-        return intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return getIntent(intent, true);
     }
-
 
     /**
-     * 获取拍照的意图
+     * Return the intent of capture.
      *
-     * @param outUri 输出的uri
-     * @return 拍照的意图
+     * @param outUri The uri of output.
+     * @return the intent of capture
      */
-    public static Intent getCaptureIntent(Uri outUri) {
+    public static Intent getCaptureIntent(final Uri outUri) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, outUri);
-        return intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-    }
-/*
-    *//**
-     * 获取选择照片的Intent
-     *
-     * @return
-     *//*
-    public static Intent getPickIntentWithGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        return intent.setType("image*//*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return getIntent(intent, true);
     }
 
-    *//**
-     * 获取从文件中选择照片的Intent
-     *
-     * @return
-     *//*
-    public static Intent getPickIntentWithDocuments() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        return intent.setType("image*//*");
+    private static Intent getIntent(final Intent intent, final boolean isNewTask) {
+        return isNewTask ? intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) : intent;
     }
 
-
-    public static Intent buildImageGetIntent(Uri saveTo, int outputX, int outputY, boolean returnData) {
-        return buildImageGetIntent(saveTo, 1, 1, outputX, outputY, returnData);
-    }
-
-    public static Intent buildImageGetIntent(Uri saveTo, int aspectX, int aspectY,
-                                             int outputX, int outputY, boolean returnData) {
-        Intent intent = new Intent();
-        if (Build.VERSION.SDK_INT < 19) {
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-        } else {
-            intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-        }
-        intent.setType("image*//*");
-        intent.putExtra("output", saveTo);
-        intent.putExtra("aspectX", aspectX);
-        intent.putExtra("aspectY", aspectY);
-        intent.putExtra("outputX", outputX);
-        intent.putExtra("outputY", outputY);
-        intent.putExtra("scale", true);
-        intent.putExtra("return-data", returnData);
-        intent.putExtra("outputFormat", Bitmap.CompressFormat.PNG.toString());
-        return intent;
-    }
-
-    public static Intent buildImageCropIntent(Uri uriFrom, Uri uriTo, int outputX, int outputY, boolean returnData) {
-        return buildImageCropIntent(uriFrom, uriTo, 1, 1, outputX, outputY, returnData);
-    }
-
-    public static Intent buildImageCropIntent(Uri uriFrom, Uri uriTo, int aspectX, int aspectY,
-                                              int outputX, int outputY, boolean returnData) {
-        Intent intent = new Intent("com.android.camera.action.CROP");
-        intent.setDataAndType(uriFrom, "image*//*");
-        intent.putExtra("crop", "true");
-        intent.putExtra("output", uriTo);
-        intent.putExtra("aspectX", aspectX);
-        intent.putExtra("aspectY", aspectY);
-        intent.putExtra("outputX", outputX);
-        intent.putExtra("outputY", outputY);
-        intent.putExtra("scale", true);
-        intent.putExtra("return-data", returnData);
-        intent.putExtra("outputFormat", Bitmap.CompressFormat.PNG.toString());
-        return intent;
-    }
-
-    public static Intent buildImageCaptureIntent(Uri uri) {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-        return intent;
-    }*/
+//    /**
+//     * 获取选择照片的 Intent
+//     *
+//     * @return
+//     */
+//    public static Intent getPickIntentWithGallery() {
+//        Intent intent = new Intent(Intent.ACTION_PICK);
+//        return intent.setType("image*//*");
+//    }
+//
+//    /**
+//     * 获取从文件中选择照片的 Intent
+//     *
+//     * @return
+//     */
+//    public static Intent getPickIntentWithDocuments() {
+//        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+//        return intent.setType("image*//*");
+//    }
+//
+//
+//    public static Intent buildImageGetIntent(final Uri saveTo, final int outputX, final int outputY, final boolean returnData) {
+//        return buildImageGetIntent(saveTo, 1, 1, outputX, outputY, returnData);
+//    }
+//
+//    public static Intent buildImageGetIntent(Uri saveTo, int aspectX, int aspectY,
+//                                             int outputX, int outputY, boolean returnData) {
+//        Intent intent = new Intent();
+//        if (Build.VERSION.SDK_INT < 19) {
+//            intent.setAction(Intent.ACTION_GET_CONTENT);
+//        } else {
+//            intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+//            intent.addCategory(Intent.CATEGORY_OPENABLE);
+//        }
+//        intent.setType("image*//*");
+//        intent.putExtra("output", saveTo);
+//        intent.putExtra("aspectX", aspectX);
+//        intent.putExtra("aspectY", aspectY);
+//        intent.putExtra("outputX", outputX);
+//        intent.putExtra("outputY", outputY);
+//        intent.putExtra("scale", true);
+//        intent.putExtra("return-data", returnData);
+//        intent.putExtra("outputFormat", Bitmap.CompressFormat.PNG.toString());
+//        return intent;
+//    }
+//
+//    public static Intent buildImageCropIntent(final Uri uriFrom, final Uri uriTo, final int outputX, final int outputY, final boolean returnData) {
+//        return buildImageCropIntent(uriFrom, uriTo, 1, 1, outputX, outputY, returnData);
+//    }
+//
+//    public static Intent buildImageCropIntent(Uri uriFrom, Uri uriTo, int aspectX, int aspectY,
+//                                              int outputX, int outputY, boolean returnData) {
+//        Intent intent = new Intent("com.android.camera.action.CROP");
+//        intent.setDataAndType(uriFrom, "image*//*");
+//        intent.putExtra("crop", "true");
+//        intent.putExtra("output", uriTo);
+//        intent.putExtra("aspectX", aspectX);
+//        intent.putExtra("aspectY", aspectY);
+//        intent.putExtra("outputX", outputX);
+//        intent.putExtra("outputY", outputY);
+//        intent.putExtra("scale", true);
+//        intent.putExtra("return-data", returnData);
+//        intent.putExtra("outputFormat", Bitmap.CompressFormat.PNG.toString());
+//        return intent;
+//    }
+//
+//    public static Intent buildImageCaptureIntent(final Uri uri) {
+//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+//        return intent;
+//    }
 }

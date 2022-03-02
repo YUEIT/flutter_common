@@ -8,14 +8,15 @@ import android.view.ViewStub;
 import java.util.List;
 
 import cn.yue.base.common.activity.BaseFragment;
-import cn.yue.base.common.utils.debug.ToastUtils;
 import cn.yue.base.common.utils.device.NetworkUtils;
+import cn.yue.base.common.utils.view.ToastUtils;
 import cn.yue.base.common.widget.dialog.WaitDialog;
 import cn.yue.base.middle.R;
 import cn.yue.base.middle.mvp.IBaseView;
 import cn.yue.base.middle.mvp.IStatusView;
 import cn.yue.base.middle.mvp.IWaitView;
-import cn.yue.base.middle.mvp.PageStatus;
+import cn.yue.base.middle.components.load.Loader;
+import cn.yue.base.middle.components.load.PageStatus;
 import cn.yue.base.middle.mvp.photo.IPhotoView;
 import cn.yue.base.middle.mvp.photo.PhotoHelper;
 import cn.yue.base.middle.view.PageHintView;
@@ -26,8 +27,7 @@ import cn.yue.base.middle.view.PageHintView;
  */
 public abstract class BaseHintFragment extends BaseFragment implements IStatusView, IWaitView, IBaseView , IPhotoView{
 
-    private boolean isFirstLoading = true;
-    protected PageStatus status = PageStatus.STATUS_NORMAL;
+    protected Loader loader = new Loader();
     protected PageHintView hintView;
     private ViewStub baseVS;
     private PhotoHelper photoHelper;
@@ -39,14 +39,15 @@ public abstract class BaseHintFragment extends BaseFragment implements IStatusVi
 
     @Override
     protected void initView(Bundle savedInstanceState) {
+        loader.setPageStatus(PageStatus.NORMAL);
         hintView = findViewById(R.id.hintView);
         hintView.setOnReloadListener(new PageHintView.OnReloadListener() {
             @Override
             public void onReload() {
                 if (NetworkUtils.isConnected()) {
-                    mActivity.recreateFragment(BaseHintFragment.this.getClass().getName());
+                    showStatusView(loader.setPageStatus(PageStatus.NORMAL));
                 } else {
-                    ToastUtils.showShortToast("网络不给力，请检查您的网络设置~");
+                    ToastUtils.showShort("网络不给力，请检查您的网络设置~");
                 }
             }
         });
@@ -65,9 +66,9 @@ public abstract class BaseHintFragment extends BaseFragment implements IStatusVi
     protected void initOther() {
         super.initOther();
         if (NetworkUtils.isConnected()) {
-            showStatusView(status);
+            showStatusView(loader.setPageStatus(PageStatus.NORMAL));
         } else {
-            showStatusView(PageStatus.STATUS_ERROR_NET);
+            showStatusView(loader.setPageStatus(PageStatus.NO_NET));
         }
     }
 
@@ -77,72 +78,16 @@ public abstract class BaseHintFragment extends BaseFragment implements IStatusVi
 
     @Override
     public void showStatusView(PageStatus status) {
-        switch (status) {
-            case STATUS_NORMAL:
-            case STATUS_SUCCESS:
-                showPageHintSuccess();
-                break;
-            case STATUS_LOADING_REFRESH:
-                showPageHintLoading();
-                break;
-            case STATUS_END:
-                showPageHintSuccess();
-                break;
-            case STATUS_ERROR_NET:
-                showPageHintErrorNet();
-                break;
-            case STATUS_ERROR_NO_DATA:
-                showPageHintErrorNoData();
-                break;
-            case STATUS_ERROR_OPERATION:
-                showPageHintErrorOperation();
-                break;
-            case STATUS_ERROR_SERVER:
-                showPageHintErrorServer();
-                break;
-        }
-        this.status = status;
-    }
-
-    private void showPageHintLoading() {
         if (hintView != null) {
-            hintView.showLoading();
-        }
-    }
-
-    private void showPageHintSuccess() {
-        if (hintView != null) {
-            hintView.showSuccess();
-        }
-        isFirstLoading = false;
-    }
-
-    private void showPageHintErrorNet() {
-        if (hintView != null) {
-            if (isFirstLoading) {
-                hintView.showErrorNet();
+            if (loader.isFirstLoad()) {
+                hintView.show(status);
             } else {
-                ToastUtils.showShortToast("网络不给力，请检查您的网络设置~");
+                hintView.show(PageStatus.NORMAL);
             }
         }
-    }
-
-    private void showPageHintErrorNoData() {
-        if (hintView != null) {
-            hintView.showErrorNoData();
-        }
-    }
-
-    private void showPageHintErrorOperation() {
-        if (hintView != null && isFirstLoading) {
-            hintView.showErrorOperation();
-        }
-    }
-
-    private void showPageHintErrorServer() {
-        if (hintView != null && isFirstLoading) {
-            hintView.showErrorOperation();
-        }
+       if (status == PageStatus.NORMAL) {
+           loader.setFirstLoad(false);
+       }
     }
 
     private WaitDialog waitDialog;
@@ -151,7 +96,7 @@ public abstract class BaseHintFragment extends BaseFragment implements IStatusVi
         if (waitDialog == null) {
             waitDialog = new WaitDialog(mActivity);
         }
-        waitDialog.show(title, true, null);
+        waitDialog.show(title);
     }
 
     @Override

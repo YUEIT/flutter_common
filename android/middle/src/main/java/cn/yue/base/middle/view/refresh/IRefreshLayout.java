@@ -9,11 +9,9 @@ import android.view.View;
 
 public interface IRefreshLayout {
 
-    void init();
-
     void setTargetView(View targetView);
 
-    void setEnabled(boolean enabled);
+    void setEnabledRefresh(boolean enabled);
 
     void startRefresh();
 

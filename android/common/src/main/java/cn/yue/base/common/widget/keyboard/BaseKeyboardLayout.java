@@ -7,8 +7,10 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
+import cn.yue.base.common.Constant;
 import cn.yue.base.common.utils.device.KeyboardUtils;
 
 
@@ -19,7 +21,7 @@ import cn.yue.base.common.utils.device.KeyboardUtils;
 public abstract class BaseKeyboardLayout extends RelativeLayout implements IKeyboard{
 
     protected EmotionLayout emotionLayout;
-    private KeyboardHelp keyboardHelp;
+    private final KeyboardHelp keyboardHelp = new KeyboardHelp();
 
     public BaseKeyboardLayout(Context context) {
         this(context, null);
@@ -31,7 +33,6 @@ public abstract class BaseKeyboardLayout extends RelativeLayout implements IKeyb
 
     public BaseKeyboardLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        keyboardHelp = new KeyboardHelp();
         keyboardHelp.addOnSoftKeyBoardVisibleListener(context, this);
         inflate(context, getLayoutId(), this);
         emotionLayout = getEmotionLayout();
@@ -48,26 +49,14 @@ public abstract class BaseKeyboardLayout extends RelativeLayout implements IKeyb
 
     @Override
     public void onKeyboardOpen() {
-        if (emotionLayout != null) {
-            emotionLayout.setKeyboardHeight(keyboardHelp.getKeyboardHeight());
-            emotionLayout.onKeyboardOpen();
-        }
+        emotionLayout.setKeyboardHeight(keyboardHelp.getKeyboardHeight());
+        emotionLayout.onKeyboardOpen();
     }
 
     @Override
     public void onKeyboardClose() {
-        if (emotionLayout != null) {
-            emotionLayout.setKeyboardHeight(keyboardHelp.getKeyboardHeight());
-            emotionLayout.onKeyboardClose();
-        }
-    }
-
-    @Override
-    public int getKeyboardHeight() {
-        if (keyboardHelp != null) {
-            keyboardHelp.getKeyboardHeight();
-        }
-        return 0;
+        emotionLayout.setKeyboardHeight(keyboardHelp.getKeyboardHeight());
+        emotionLayout.onKeyboardClose();
     }
 
     @Override
@@ -121,7 +110,7 @@ public abstract class BaseKeyboardLayout extends RelativeLayout implements IKeyb
 
     @Override
     public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
-        if (KeyboardUtils.isFullScreen((Activity) getContext())) {
+        if (isFullScreen((Activity) getContext())) {
             return false;
         }
         return super.requestFocus(direction, previouslyFocusedRect);
@@ -129,10 +118,13 @@ public abstract class BaseKeyboardLayout extends RelativeLayout implements IKeyb
 
     @Override
     public void requestChildFocus(View child, View focused) {
-        if (KeyboardUtils.isFullScreen((Activity) getContext())) {
+        if (isFullScreen((Activity) getContext())) {
             return;
         }
         super.requestChildFocus(child, focused);
     }
 
+    private boolean isFullScreen(Activity context) {
+        return (context.getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_FULLSCREEN) != 0;
+    }
 }

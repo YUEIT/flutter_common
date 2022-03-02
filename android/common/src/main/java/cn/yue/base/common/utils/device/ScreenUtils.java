@@ -1,104 +1,212 @@
 package cn.yue.base.common.utils.device;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.os.Build;
 import android.provider.Settings;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 import android.util.DisplayMetrics;
 import android.view.Surface;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 
 import cn.yue.base.common.utils.Utils;
-import cn.yue.base.common.utils.app.BarUtils;
+
+import static android.Manifest.permission.WRITE_SETTINGS;
 
 /**
- * Description : 屏幕相关工具类
- * Created by yue on 2019/3/11
+ * <pre>
+ *     author: Blankj
+ *     blog  : http://blankj.com
+ *     time  : 2016/08/02
+ *     desc  : utils about screen
+ * </pre>
  */
-public class ScreenUtils {
+public final class ScreenUtils {
 
     private ScreenUtils() {
         throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
     /**
-     * 获取屏幕的宽度（单位：px）
+     * Return the width of screen, in pixel.
      *
-     * @return 屏幕宽px
+     * @return the width of screen, in pixel
      */
     public static int getScreenWidth() {
-        WindowManager windowManager = (WindowManager) Utils.getContext().getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();// 创建了一张白纸
-        windowManager.getDefaultDisplay().getMetrics(dm);// 给白纸设置宽高
-        return dm.widthPixels;
+        WindowManager wm = (WindowManager) Utils.getApp().getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null) return -1;
+        Point point = new Point();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            wm.getDefaultDisplay().getRealSize(point);
+        } else {
+            wm.getDefaultDisplay().getSize(point);
+        }
+        return point.x;
     }
 
     /**
-     * 获取屏幕的高度（单位：px）
+     * Return the height of screen, in pixel.
      *
-     * @return 屏幕高px
+     * @return the height of screen, in pixel
      */
     public static int getScreenHeight() {
-        WindowManager windowManager = (WindowManager) Utils.getContext().getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();// 创建了一张白纸
-        windowManager.getDefaultDisplay().getMetrics(dm);// 给白纸设置宽高
-        return dm.heightPixels;
+        WindowManager wm = (WindowManager) Utils.getApp().getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null) return -1;
+        Point point = new Point();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            wm.getDefaultDisplay().getRealSize(point);
+        } else {
+            wm.getDefaultDisplay().getSize(point);
+        }
+        return point.y;
     }
 
     /**
-     * 设置屏幕为横屏
-     * <p>还有一种就是在Activity中加属性android:screenOrientation="landscape"</p>
-     * <p>不设置Activity的android:configChanges时，切屏会重新调用各个生命周期，切横屏时会执行一次，切竖屏时会执行两次</p>
-     * <p>设置Activity的android:configChanges="orientation"时，切屏还是会重新调用各个生命周期，切横、竖屏时只会执行一次</p>
-     * <p>设置Activity的android:configChanges="orientation|keyboardHidden|screenSize"（4.0以上必须带最后一个参数）时
-     * 切屏不会重新调用各个生命周期，只会执行onConfigurationChanged方法</p>
+     * Return the application's width of screen, in pixel.
      *
-     * @param activity activity
+     * @return the application's width of screen, in pixel
      */
-    public static void setLandscape(Activity activity) {
+    public static int getAppScreenWidth() {
+        WindowManager wm = (WindowManager) Utils.getApp().getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null) return -1;
+        Point point = new Point();
+        wm.getDefaultDisplay().getSize(point);
+        return point.x;
+    }
+
+    /**
+     * Return the application's height of screen, in pixel.
+     *
+     * @return the application's height of screen, in pixel
+     */
+    public static int getAppScreenHeight() {
+        WindowManager wm = (WindowManager) Utils.getApp().getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null) return -1;
+        Point point = new Point();
+        wm.getDefaultDisplay().getSize(point);
+        return point.y;
+    }
+
+    /**
+     * Return the density of screen.
+     *
+     * @return the density of screen
+     */
+    public static float getScreenDensity() {
+        return Resources.getSystem().getDisplayMetrics().density;
+    }
+
+    /**
+     * Return the screen density expressed as dots-per-inch.
+     *
+     * @return the screen density expressed as dots-per-inch
+     */
+    public static int getScreenDensityDpi() {
+        return Resources.getSystem().getDisplayMetrics().densityDpi;
+    }
+
+    /**
+     * Set full screen.
+     *
+     * @param activity The activity.
+     */
+    public static void setFullScreen(@NonNull final Activity activity) {
+        activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    /**
+     * Set non full screen.
+     *
+     * @param activity The activity.
+     */
+    public static void setNonFullScreen(@NonNull final Activity activity) {
+        activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    /**
+     * Toggle full screen.
+     *
+     * @param activity The activity.
+     */
+    public static void toggleFullScreen(@NonNull final Activity activity) {
+        boolean isFullScreen = isFullScreen(activity);
+        Window window = activity.getWindow();
+        if (isFullScreen) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        } else {
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
+
+    /**
+     * Return whether screen is full.
+     *
+     * @param activity The activity.
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isFullScreen(@NonNull final Activity activity) {
+        int fullScreenFlag = WindowManager.LayoutParams.FLAG_FULLSCREEN;
+        return (activity.getWindow().getAttributes().flags & fullScreenFlag) == fullScreenFlag;
+    }
+
+    /**
+     * Set the screen to landscape.
+     *
+     * @param activity The activity.
+     */
+    @SuppressLint("SourceLockedOrientationActivity")
+    public static void setLandscape(@NonNull final Activity activity) {
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
 
     /**
-     * 设置屏幕为竖屏
+     * Set the screen to portrait.
      *
-     * @param activity activity
+     * @param activity The activity.
      */
-    public static void setPortrait(Activity activity) {
+    @SuppressLint("SourceLockedOrientationActivity")
+    public static void setPortrait(@NonNull final Activity activity) {
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     /**
-     * 判断是否横屏
+     * Return whether screen is landscape.
      *
-     * @return {@code true}: 是<br>{@code false}: 否
+     * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isLandscape() {
-        return Utils.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+        return Utils.getApp().getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE;
     }
 
     /**
-     * 判断是否竖屏
+     * Return whether screen is portrait.
      *
-     * @return {@code true}: 是<br>{@code false}: 否
+     * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isPortrait() {
-        return Utils.getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+        return Utils.getApp().getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_PORTRAIT;
     }
 
     /**
-     * 获取屏幕旋转角度
+     * Return the rotation of screen.
      *
-     * @param activity activity
-     * @return 屏幕旋转角度
+     * @param activity The activity.
+     * @return the rotation of screen
      */
-    public static int getScreenRotation(Activity activity) {
+    public static int getScreenRotation(@NonNull final Activity activity) {
         switch (activity.getWindowManager().getDefaultDisplay().getRotation()) {
-            default:
             case Surface.ROTATION_0:
                 return 0;
             case Surface.ROTATION_90:
@@ -107,74 +215,104 @@ public class ScreenUtils {
                 return 180;
             case Surface.ROTATION_270:
                 return 270;
+            default:
+                return 0;
         }
     }
 
     /**
-     * 获取当前屏幕截图，包含状态栏
+     * Return the bitmap of screen.
      *
-     * @param activity activity
-     * @return Bitmap
+     * @param activity The activity.
+     * @return the bitmap of screen
      */
-    public static Bitmap captureWithStatusBar(Activity activity) {
-        View view = activity.getWindow().getDecorView();
-        view.setDrawingCacheEnabled(true);
-        view.buildDrawingCache();
-        Bitmap bmp = view.getDrawingCache();
+    public static Bitmap screenShot(@NonNull final Activity activity) {
+        return screenShot(activity, false);
+    }
+
+    /**
+     * Return the bitmap of screen.
+     *
+     * @param activity          The activity.
+     * @param isDeleteStatusBar True to delete status bar, false otherwise.
+     * @return the bitmap of screen
+     */
+    public static Bitmap screenShot(@NonNull final Activity activity, boolean isDeleteStatusBar) {
+        View decorView = activity.getWindow().getDecorView();
+        boolean drawingCacheEnabled = decorView.isDrawingCacheEnabled();
+        boolean willNotCacheDrawing = decorView.willNotCacheDrawing();
+        decorView.setDrawingCacheEnabled(true);
+        decorView.setWillNotCacheDrawing(false);
+        Bitmap bmp = decorView.getDrawingCache();
+        if (bmp == null) {
+            decorView.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            decorView.layout(0, 0, decorView.getMeasuredWidth(), decorView.getMeasuredHeight());
+            decorView.buildDrawingCache();
+            bmp = Bitmap.createBitmap(decorView.getDrawingCache());
+        }
+        if (bmp == null) return null;
         DisplayMetrics dm = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
-        Bitmap ret = Bitmap.createBitmap(bmp, 0, 0, dm.widthPixels, dm.heightPixels);
-        view.destroyDrawingCache();
+        Bitmap ret;
+        if (isDeleteStatusBar) {
+            Resources resources = activity.getResources();
+            int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
+            int statusBarHeight = resources.getDimensionPixelSize(resourceId);
+            ret = Bitmap.createBitmap(
+                    bmp,
+                    0,
+                    statusBarHeight,
+                    dm.widthPixels,
+                    dm.heightPixels - statusBarHeight
+            );
+        } else {
+            ret = Bitmap.createBitmap(bmp, 0, 0, dm.widthPixels, dm.heightPixels);
+        }
+        decorView.destroyDrawingCache();
+        decorView.setWillNotCacheDrawing(willNotCacheDrawing);
+        decorView.setDrawingCacheEnabled(drawingCacheEnabled);
         return ret;
     }
 
     /**
-     * 获取当前屏幕截图，不包含状态栏
+     * Return whether screen is locked.
      *
-     * @param activity activity
-     * @return Bitmap
-     */
-    public static Bitmap captureWithoutStatusBar(Activity activity) {
-        View view = activity.getWindow().getDecorView();
-        view.setDrawingCacheEnabled(true);
-        view.buildDrawingCache();
-        Bitmap bmp = view.getDrawingCache();
-        int statusBarHeight = BarUtils.getStatusBarHeight(activity);
-        DisplayMetrics dm = new DisplayMetrics();
-        activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
-        Bitmap ret = Bitmap.createBitmap(bmp, 0, statusBarHeight, dm.widthPixels, dm.heightPixels - statusBarHeight);
-        view.destroyDrawingCache();
-        return ret;
-    }
-
-    /**
-     * 判断是否锁屏
-     *
-     * @return {@code true}: 是<br>{@code false}: 否
+     * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isScreenLock() {
-        KeyguardManager km = (KeyguardManager) Utils.getContext().getSystemService(Context.KEYGUARD_SERVICE);
+        KeyguardManager km =
+                (KeyguardManager) Utils.getApp().getSystemService(Context.KEYGUARD_SERVICE);
+        if (km == null) return false;
         return km.inKeyguardRestrictedInputMode();
     }
 
     /**
-     * 设置进入休眠时长
-     * <p>需添加权限 {@code <uses-permission android:name="android.permission.WRITE_SETTINGS" />}</p>
+     * Set the duration of sleep.
+     * <p>Must hold {@code <uses-permission android:name="android.permission.WRITE_SETTINGS" />}</p>
      *
-     * @param duration 时长
+     * @param duration The duration.
      */
-    public static void setSleepDuration(int duration) {
-        Settings.System.putInt(Utils.getContext().getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT, duration);
+    @RequiresPermission(WRITE_SETTINGS)
+    public static void setSleepDuration(final int duration) {
+        Settings.System.putInt(
+                Utils.getApp().getContentResolver(),
+                Settings.System.SCREEN_OFF_TIMEOUT,
+                duration
+        );
     }
 
     /**
-     * 获取进入休眠时长
+     * Return the duration of sleep.
      *
-     * @return 进入休眠时长，报错返回-123
+     * @return the duration of sleep.
      */
     public static int getSleepDuration() {
         try {
-            return Settings.System.getInt(Utils.getContext().getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT);
+            return Settings.System.getInt(
+                    Utils.getApp().getContentResolver(),
+                    Settings.System.SCREEN_OFF_TIMEOUT
+            );
         } catch (Settings.SettingNotFoundException e) {
             e.printStackTrace();
             return -123;

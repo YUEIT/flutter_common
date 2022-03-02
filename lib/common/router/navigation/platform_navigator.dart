@@ -1,4 +1,4 @@
-import 'package:flutter_boost/boost_navigator.dart';
+import 'package:flutter_boost/flutter_boost.dart';
 
 /// 路由
 class PlatformNavigator {
@@ -16,12 +16,12 @@ class PlatformNavigator {
   /// 打开页面
   Future<T>? open<T extends Object>(String name,
       {Map<String, dynamic>? arguments, bool withContainer = false}) {
-    return BoostNavigator.of()
+    return BoostNavigator.instance
         .push(name, arguments: arguments, withContainer: withContainer);
   }
 
   /// 关闭页面
-  void close<T extends Object>([T? result]) {
-    return BoostNavigator.of().pop(result);
+  Future<bool> close<T extends Object>([T? result]) {
+    return BoostNavigator.instance.pop(result);
   }
 }

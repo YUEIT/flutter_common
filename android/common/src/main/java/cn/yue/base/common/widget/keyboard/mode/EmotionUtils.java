@@ -47,14 +47,8 @@ public class EmotionUtils {
         allEmotionSort = list;
     }
 
-    public static void clearAllEmotion(Context context) {
+    public static void clearAllEmotion() {
         EmojiUtils.clearEmojiSort();
-        for(Iterator iterator = emotionClickListenerList.iterator(); iterator.hasNext(); ) {
-            OnEmotionClickListener e = (OnEmotionClickListener) iterator.next();
-            if (e.isThis(context)) {
-                iterator.remove();
-            }
-        }
     }
 
     public static List<IEmotionSort> getAllEmotionSort() {
@@ -92,24 +86,6 @@ public class EmotionUtils {
             }
         }
         return null;
-    }
-
-    private static List<OnEmotionClickListener> emotionClickListenerList = new ArrayList<>();
-
-    public static void setOnEmotionClickListener(OnEmotionClickListener clickListener) {
-        if (clickListener != null) {
-            for(Iterator iterator = emotionClickListenerList.iterator(); iterator.hasNext(); ) {
-                OnEmotionClickListener e = (OnEmotionClickListener) iterator.next();
-                if (e.getContext() == clickListener.getContext()) {
-                    iterator.remove();
-                }
-            }
-            emotionClickListenerList.add(clickListener);
-        }
-    }
-
-    public static List<OnEmotionClickListener> getOnEmotionClickListener() {
-        return emotionClickListenerList;
     }
 }
 

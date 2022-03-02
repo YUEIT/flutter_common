@@ -1,13 +1,10 @@
 package cn.yue.base.middle.net.upload;
 
-
-import com.trello.rxlifecycle3.LifecycleProvider;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.yue.base.common.utils.file.BitmapFileUtil;
+import cn.yue.base.common.activity.rx.ILifecycleProvider;
 import cn.yue.base.middle.init.BaseUrlAddress;
 import cn.yue.base.middle.init.InitConstant;
 import cn.yue.base.middle.net.RetrofitManager;
@@ -27,19 +24,19 @@ import okhttp3.RequestBody;
  */
 public class UploadUtils {
 
-    private static final UploadServer uploadServer = RetrofitManager.getInstance().getRetrofit(BaseUrlAddress.getUpLoadUrl()).create(UploadServer.class);
+    private static final UploadServer uploadServer = RetrofitManager.getInstance().getRetrofit("http://upload").create(UploadServer.class);
 
     public static UploadServer getUploadServer() {
         return uploadServer;
     }
-    public static <E> void upload(List<String> files, LifecycleProvider<E> lifecycleProvider, BaseUploadObserver uploadObserver) {
+    public static <E> void upload(List<String> files, ILifecycleProvider<E> lifecycleProvider, BaseUploadObserver uploadObserver) {
         UploadUtils.getCompressFileList(files)
                 .subscribeOn(Schedulers.io())
                 .flatMap(new Function<List<File>, SingleSource<ImageResultListData>>() {
                     @Override
                     public SingleSource<ImageResultListData> apply(List<File> files) throws Exception {
                         String url;
-                        if (InitConstant.isDebug) {
+                        if (InitConstant.isDebug()) {
                             url = "4tpBNVAu7iPQgmQetUXvXA";
                         } else {
                             url = getUploadKey();
@@ -48,7 +45,7 @@ public class UploadUtils {
                     }
                 })
                 .subscribeOn(Schedulers.newThread())
-                .compose(lifecycleProvider.<ImageResultListData>bindToLifecycle())
+                .compose(lifecycleProvider.<ImageResultListData>toBindLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(uploadObserver);
     }
@@ -70,10 +67,10 @@ public class UploadUtils {
                     public SingleSource<? extends List<File>> apply(List<String> strings) throws Exception {
                         List<File> files = new ArrayList<>();
                         for (String url : strings) {
-                            File file = BitmapFileUtil.getCompressBitmapFile(url);
-                            if (file != null) {
-                                files.add(file);
-                            }
+//                            File file = BitmapFileUtil.getCompressBitmapFile(url);
+//                            if (file != null) {
+//                                files.add(file);
+//                            }
                         }
                         return Single.just(files);
                     }

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_boost/flutter_boost_app.dart';
+import 'package:flutter_boost/flutter_boost.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_common/common/components/provider/dialog_provider.dart';
 import 'package:flutter_common/common/constant/debug.dart';
@@ -12,6 +12,8 @@ import 'package:flutter_common/common/utils/dimens_extension.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  ///这里的CustomFlutterBinding调用务必不可缺少，用于控制Boost状态的resume和pause
+  CustomFlutterBinding();
   // 错误拦截
   FlutterError.onError = (FlutterErrorDetails details) {
     if (Debug.isDebug()) {
@@ -48,6 +50,9 @@ void main() {
   });
 
 }
+
+///创建一个自定义的Binding，继承和with的关系如下，里面什么都不用写
+class CustomFlutterBinding extends WidgetsFlutterBinding with BoostFlutterBinding {}
 
 Future _reportError(dynamic error, dynamic stackTrace) async {
   if (Debug.isDebug()) {
@@ -91,7 +96,7 @@ class _MyAppState extends State<MyApp> {
     NetUtils.init();
   }
 
-  Route<dynamic>? routeFactory(RouteSettings settings, String uniqueId) {
+  Route<dynamic>? routeFactory(RouteSettings settings, String? uniqueId) {
     FlutterBoostRouteFactory? func = builders[settings.name];
     if (func == null) {
       return null;
@@ -135,6 +140,7 @@ class HomeWidget extends StatelessWidget {
     ScreenUtil.init(BoxConstraints(
       maxWidth: MediaQuery.of(context).size.width,
       maxHeight: MediaQuery.of(context).size.height,),
+      context: context,
       designSize: Size(DimensExtension.screenWidth, DimensExtension.screenHeight),
     );
     return Container(

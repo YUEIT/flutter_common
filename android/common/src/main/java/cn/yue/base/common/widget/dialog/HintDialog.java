@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
+
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -15,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import cn.yue.base.common.R;
+import cn.yue.base.common.databinding.LayoutHintDialogBinding;
 
 /**
  * Description : 提示框
@@ -22,34 +25,22 @@ import cn.yue.base.common.R;
  */
 public class HintDialog extends Dialog{
 
-    private Context context;
+    private LayoutHintDialogBinding binding;
+
     public HintDialog(@NonNull Context context) {
         super(context);
-        this.context = context;
-        initView();
+        initView(context);
     }
 
-    private TextView titleTV;
-    private TextView leftClickTV;
-    private TextView rightClickTV;
-    private View divider;
-    private LinearLayout contentLL;
-    private void initView() {
-        if (null == context) return;
+    private void initView(Context context) {
         getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         getWindow().setGravity(Gravity.CENTER);
         getWindow().setWindowAnimations(R.style.FadeAnimation);
         View content = View.inflate(context, R.layout.layout_hint_dialog, null);
-        if (null != content) {
-            titleTV = content.findViewById(R.id.titleTV);
-            leftClickTV = content.findViewById(R.id.leftClickTV);
-            rightClickTV = content.findViewById(R.id.rightClickTV);
-            divider = content.findViewById(R.id.divider);
-            contentLL = content.findViewById(R.id.contentLL);
-            setContentView(content);
-            setCanceledOnTouchOutside(true);
-        }
+        binding = DataBindingUtil.bind(content);
+        setContentView(content);
+        setCanceledOnTouchOutside(true);
     }
 
     public static final class Builder {
@@ -151,13 +142,13 @@ public class HintDialog extends Dialog{
                 hintDialog = new HintDialog(context);
             }
             if (isShowTitle) {
-                hintDialog.titleTV.setText(titleStr);
-                hintDialog.titleTV.setVisibility(View.VISIBLE);
+                hintDialog.binding.titleTV.setText(titleStr);
+                hintDialog.binding.titleTV.setVisibility(View.VISIBLE);
             } else {
-                hintDialog.titleTV.setVisibility(View.GONE);
+                hintDialog.binding.titleTV.setVisibility(View.GONE);
             }
             if (titleColor > 0) {
-                hintDialog.titleTV.setTextColor(titleColor);
+                hintDialog.binding.titleTV.setTextColor(titleColor);
             }
             if (contentView == null) {
                 if (!TextUtils.isEmpty(contentStr)) {
@@ -169,20 +160,20 @@ public class HintDialog extends Dialog{
                     if (contentColor > 0) {
                         contentTV.setTextColor(contentColor);
                     }
-                    hintDialog.contentLL.addView(contentTV);
+                    hintDialog.binding.contentLL.addView(contentTV);
                 }
             } else {
-                hintDialog.contentLL.addView(contentView);
+                hintDialog.binding.contentLL.addView(contentView);
             }
-            hintDialog.leftClickTV.setText(leftClickStr);
+            hintDialog.binding.leftClickTV.setText(leftClickStr);
             if (leftColor > 0) {
-                hintDialog.leftClickTV.setTextColor(leftColor);
+                hintDialog.binding.leftClickTV.setTextColor(leftColor);
             }
-            hintDialog.rightClickTV.setText(rightClickStr);
+            hintDialog.binding.rightClickTV.setText(rightClickStr);
             if (rightColor > 0) {
-                hintDialog.rightClickTV.setTextColor(rightColor);
+                hintDialog.binding.rightClickTV.setTextColor(rightColor);
             }
-            hintDialog.leftClickTV.setOnClickListener(new View.OnClickListener() {
+            hintDialog.binding.leftClickTV.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (onLeftClickListener != null) {
@@ -191,7 +182,7 @@ public class HintDialog extends Dialog{
                     hintDialog.dismiss();
                 }
             });
-            hintDialog.rightClickTV.setOnClickListener(new View.OnClickListener() {
+            hintDialog.binding.rightClickTV.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (onRightClickListener != null) {
@@ -202,16 +193,16 @@ public class HintDialog extends Dialog{
             });
             if (isSingleClick) {
                 if (!TextUtils.isEmpty(leftClickStr)) {
-                    hintDialog.leftClickTV.setVisibility(View.VISIBLE);
-                    hintDialog.rightClickTV.setVisibility(View.GONE);
+                    hintDialog.binding.leftClickTV.setVisibility(View.VISIBLE);
+                    hintDialog.binding.rightClickTV.setVisibility(View.GONE);
                 } else if (!TextUtils.isEmpty(rightClickStr)){
-                    hintDialog.leftClickTV.setVisibility(View.GONE);
-                    hintDialog.rightClickTV.setVisibility(View.VISIBLE);
+                    hintDialog.binding.leftClickTV.setVisibility(View.GONE);
+                    hintDialog.binding.rightClickTV.setVisibility(View.VISIBLE);
                 } else {
-                    hintDialog.rightClickTV.setVisibility(View.VISIBLE);
-                    hintDialog.leftClickTV.setVisibility(View.GONE);
+                    hintDialog.binding.rightClickTV.setVisibility(View.VISIBLE);
+                    hintDialog.binding.leftClickTV.setVisibility(View.GONE);
                 }
-                hintDialog.divider.setVisibility(View.GONE);
+                hintDialog.binding.divider.setVisibility(View.GONE);
             }
             return hintDialog;
         }

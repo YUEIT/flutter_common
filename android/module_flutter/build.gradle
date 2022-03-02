@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion rootProject.ext.android.targetSdkVersion
@@ -9,16 +7,10 @@ android {
         minSdkVersion rootProject.ext.android.minSdkVersion
         targetSdkVersion rootProject.ext.android.targetSdkVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-//        javaCompileOptions {
-//            annotationProcessorOptions {
-//                arguments = [ AROUTER_MODULE_NAME  : project.getName() ]
-//            }
-//        }
-        kapt {
-            arguments {
-                arg("AROUTER_MODULE_NAME", project.getName())
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [ AROUTER_MODULE_NAME  : project.getName() ]
             }
-            generateStubs = true
         }
     }
 
@@ -51,15 +43,15 @@ dependencies {
     api rootProject.ext.kotlin["coroutine-android"]
 
     //aRouter
-    api rootProject.ext.dependencies["arouter-api"]
-    kapt rootProject.ext.dependencies["arouter-compiler"]
+    implementation rootProject.ext.dependencies["arouter-api"]
+    annotationProcessor rootProject.ext.dependencies["arouter-compiler"]
 
     api project(':middle')
     
     if (rootProject.ext.flutter.enable) {
         // pub 会下载到本地
         api project(':flutter_boost')
-        api project(':path_provider')
+        api project(':path_provider_android')
         api project(':sqflite')
     } else {
         // 各插件编译生成的aar 放入libs中，或者放入远程仓库

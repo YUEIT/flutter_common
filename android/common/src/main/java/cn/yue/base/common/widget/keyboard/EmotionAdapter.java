@@ -43,12 +43,16 @@ public class EmotionAdapter<T extends IEmotion> extends CommonAdapter<T>{
         setOnItemClickListener(new CommonViewHolder.OnItemClickListener<T>() {
             @Override
             public void onItemClick(int position, T t) {
-                if (EmotionUtils.getOnEmotionClickListener() != null) {
-                    for (OnEmotionClickListener emotionClickListener : EmotionUtils.getOnEmotionClickListener()) {
-                        emotionClickListener.onClick(t);
-                    }
+                if (onEmotionClickListener != null) {
+                    onEmotionClickListener.onClick(t);
                 }
             }
         });
+    }
+
+    private OnEmotionClickListener onEmotionClickListener;
+
+    public void setOnEmotionClickListener(OnEmotionClickListener onEmotionClickListener) {
+        this.onEmotionClickListener = onEmotionClickListener;
     }
 }

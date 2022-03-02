@@ -5,15 +5,17 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Description : 路由跳转
+ * Created by yue on 2020/4/22
+ */
 public interface INavigation {
 
-    void bindRouterCard(RouterCard routerCard);
+    INavigation bindRouterCard(RouterCard routerCard);
 
-    void navigation(Context context);
+    void navigation(@NonNull Context context);
 
-    void navigation(@NonNull Context context, Class toActivity);
+    void navigation(@NonNull Context context, int requestCode);
 
-    void navigation(Activity context, int requestCode);
-
-    void navigation(@NonNull Activity context, Class toActivity, int requestCode);
+    void navigation(@NonNull Context context, int requestCode, String toActivity);
 }

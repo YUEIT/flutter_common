@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import java.util.List;
 
 import cn.yue.base.common.R;
+import cn.yue.base.common.widget.keyboard.mode.IEmotion;
 import cn.yue.base.common.widget.keyboard.mode.IEmotionPage;
 
 /**
@@ -46,7 +47,16 @@ public class EmotionPageAdapter<T extends IEmotionPage> extends PagerAdapter {
         RecyclerView emotionRV = contentView.findViewById(R.id.emotionRV);
         if (pageList!= null && pageList.size() > position) {
             emotionRV.setLayoutManager(new GridLayoutManager(context, pageList.get(position).getRowNum()));
-            emotionRV.setAdapter(new EmotionAdapter(context, pageList.get(position).getEmotionList()));
+            EmotionAdapter adapter = new EmotionAdapter(context, pageList.get(position).getEmotionList());
+            adapter.setOnEmotionClickListener(new OnEmotionClickListener() {
+                @Override
+                public void onClick(IEmotion item) {
+                    if (onEmotionClickListener != null) {
+                        onEmotionClickListener.onClick(item);
+                    }
+                }
+            });
+            emotionRV.setAdapter(adapter);
         }
         container.addView(contentView);
         return contentView;
@@ -63,5 +73,11 @@ public class EmotionPageAdapter<T extends IEmotionPage> extends PagerAdapter {
     @Override
     public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
 
+    }
+
+    private OnEmotionClickListener onEmotionClickListener;
+
+    public void setOnEmotionClickListener(OnEmotionClickListener onEmotionClickListener) {
+        this.onEmotionClickListener = onEmotionClickListener;
     }
 }

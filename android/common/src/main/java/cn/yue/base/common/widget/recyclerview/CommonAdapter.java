@@ -2,13 +2,13 @@ package cn.yue.base.common.widget.recyclerview;
 
 import android.content.Context;
 import android.os.Bundle;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -361,7 +361,6 @@ public abstract class CommonAdapter<T> extends RecyclerView.Adapter<RecyclerView
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Log.d("luobiao", "onCreateViewHolder: " + viewType);
         int headerViewsCountCount = getHeaderViewsCount();
         if (viewType < 0 && viewType >= TYPE_HEADER_VIEW) {
             return new ViewHolder(mHeaderViews.get(viewType - TYPE_HEADER_VIEW));
@@ -428,9 +427,9 @@ public abstract class CommonAdapter<T> extends RecyclerView.Adapter<RecyclerView
         }
     }
 
-    protected void setVisable(View view,boolean visable){
+    protected void setVisible(View view,boolean visible){
         if(null!=view){
-            if(visable){
+            if(visible){
                 view.setVisibility(View.VISIBLE);
             }else{
                 view.setVisibility(View.GONE);
@@ -514,7 +513,7 @@ public abstract class CommonAdapter<T> extends RecyclerView.Adapter<RecyclerView
 
         @Override
         public int getItemCount() {
-            return list != null ? list.size() : 0;
+            return getListSize();
         }
 
         @Override
@@ -523,6 +522,9 @@ public abstract class CommonAdapter<T> extends RecyclerView.Adapter<RecyclerView
         }
     }
 
+    public int getListSize() {
+        return list != null ? list.size() : 0;
+    }
 
     public final int getInnerViewType(int position) {
         return getViewType(position);

@@ -7,7 +7,7 @@ import 'router_impl.dart';
 @ARouteRoot()
 class AppRoute {
 
-  static Widget getPage(String urlString, dynamic params, String uniqueId) {
+  static Widget getPage(String urlString, dynamic params, String? uniqueId) {
     print("$urlString");
     Map<String, dynamic> query = Map();
     if (params != null && params is Map) {
@@ -18,7 +18,7 @@ class AppRoute {
     return _getPage(urlString, query, uniqueId);
   }
 
-  static Widget _getPage(String urlString, Map<String, dynamic> query, String uniqueId) {
+  static Widget _getPage(String urlString, Map<String, dynamic> query, String? uniqueId) {
     ARouterInternalImpl internal = ARouterInternalImpl();
     ARouterResult routeResult = internal.findPage(ARouteOption(urlString, query, uniqueId), ARouteOption(urlString, query, uniqueId));
     if(routeResult.state == ARouterResultState.FOUND) {

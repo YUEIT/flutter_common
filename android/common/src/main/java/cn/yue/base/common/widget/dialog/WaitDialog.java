@@ -12,6 +12,8 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import cn.yue.base.common.R;
 import cn.yue.base.common.image.ImageLoader;
 
@@ -24,85 +26,49 @@ public class WaitDialog {
 
     private Activity activity;
     private Dialog dialog;
-    //    private AppProgressBar progressBar;
-    private ImageView image;
-    private TextView titleText;
+    private TextView waitText;
     private Handler handler;
 
-    public WaitDialog(Activity activity){
+    public WaitDialog(@NonNull Activity activity) {
         this.activity = activity;
         handler = new Handler();
+        dialog = new Dialog(activity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setGravity(Gravity.CENTER);
+        }
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        View view = View.inflate(activity, R.layout.layout_wait_dialog, null);
+        waitText = (TextView) view.findViewById(R.id.waitText);
+        dialog.setContentView(view);
     }
 
-    private void init(){
-        if (null != activity){
-            dialog = new Dialog(activity);
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            dialog.getWindow().setGravity(Gravity.CENTER);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-            View view = ((LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.layout_wait_dialog, null);
-            image = (ImageView) view.findViewById(R.id.cst_wait_dialog_img);
-            ImageLoader.getLoader().loadGif(image, R.drawable.app_icon_wait);
-//            progressBar = (AppProgressBar) view.findViewById(R.id.cst_wait_dialog_progressBar);
-            titleText = (TextView) view.findViewById(R.id.cst_wait_dialog_text);
-//            progressBar.setProgressBarBackgroundColor(Color.parseColor("#80000000"));
-            dialog.setContentView(view);
-//            progressBar.startAnimation();
-        }
-    }
-
-    /**
-     *
-     * @param title
-     * @param isProgress
-     * @param imgRes     显示滚动条的时候该值传递null
-     */
-    public void show(String title, boolean isProgress, Integer imgRes){
-        if (null == dialog){
-            init();
-        }
-        if (null != activity && activity.isFinishing()){
+    public void show(String title) {
+        if (activity.isFinishing()) {
             return;
         }
-
-        if (null != dialog){
-            if (dialog.isShowing()){
-                dialog.cancel();
-            }
-            dialog.show();
-        }
-        setDialog(title, isProgress, imgRes);
-    }
-
-    private void setDialog(String title, boolean isProgress, Integer imgRes){
-        if (null != titleText && !TextUtils.isEmpty(title)){
-            titleText.setText(title);
-            titleText.setVisibility(View.VISIBLE);
+        if (!TextUtils.isEmpty(title)) {
+            waitText.setText(title);
+            waitText.setVisibility(View.VISIBLE);
         } else {
-            titleText.setVisibility(View.GONE);
+            waitText.setVisibility(View.GONE);
         }
-        if (null != image){
-            if (isProgress){
-                image.setVisibility(View.VISIBLE);
-            }else{
-                image.setVisibility(View.VISIBLE);
-            }
+        if (dialog.isShowing()) {
+            dialog.cancel();
         }
-        if (null != imgRes && null != image && null != activity){
-            image.setBackgroundDrawable(activity.getResources().getDrawable(imgRes));
-        }
+        dialog.show();
     }
 
-
-    public void cancel(){
-        if (null != dialog && null != activity && !activity.isFinishing()){
+    public void cancel() {
+        if (null != dialog && null != activity && !activity.isFinishing()) {
             dialog.cancel();
         }
     }
 
-    public void delayCancel(int time){
-        if (null != handler){
+    public void delayCancel(int time) {
+        if (null != handler) {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -112,13 +78,13 @@ public class WaitDialog {
         }
     }
 
-    public void delayCancel(int time, final DelayCancelListener listener){
-        if (null != handler){
+    public void delayCancel(int time, final DelayCancelListener listener) {
+        if (null != handler) {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     cancel();
-                    if (null != listener){
+                    if (null != listener) {
                         listener.onDeal();
                     }
                 }
@@ -127,19 +93,19 @@ public class WaitDialog {
     }
 
     public boolean isShowing() {
-        if(null != dialog) {
+        if (null != dialog) {
             return dialog.isShowing();
         }
         return false;
     }
 
-    public void setCancelable(boolean cancelable){
-        if (null != dialog){
+    public void setCancelable(boolean cancelable) {
+        if (null != dialog) {
             dialog.setCancelable(cancelable);
         }
     }
 
-    public interface DelayCancelListener{
+    public interface DelayCancelListener {
         void onDeal();
     }
 }

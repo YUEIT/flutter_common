@@ -2,6 +2,7 @@ package cn.yue.base.middle.activity;
 
 import android.graphics.Color;
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 
 /**

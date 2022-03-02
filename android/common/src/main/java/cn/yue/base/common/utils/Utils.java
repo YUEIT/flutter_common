@@ -1,86 +1,133 @@
 package cn.yue.base.common.utils;
 
-import android.content.Context;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.Application;
+import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+
+import cn.yue.base.common.utils.code.ThreadUtils;
 
 /**
- * Utils 包括以下几个部分
- *  app: 应用相关
- *       ActivityUtils
- *       AppUtils
- *       BarUtils
- *       FragmentUtils
- *       IntentUtils
- *
- *  code: 代码相关
- *       HandlerUtils
- *       ProcessUtils 进程工具
- *       ServiceUtils   服务工具
- *       ShellUtils  root工具
- *       SPUtils    sharedPreference工具
- *       ThreadPoolUtils    线程池工具
- *
- *  Constant:
- *       ConstantUtils  常量工具
- *       ConvertUtils   基本类型转换工具
- *       EncodeUtils    编码解码工具
- *       EncryptUtils   加密解密工具
- *       ImageUtils     图片类型转换
- *       LunarUtils     阴历相关
- *       PinyinUtils    拼音
- *       RegexUtils     正则
- *       SpannableStringUtils   SpannableString
- *       StringUtils
- *       TimeUtils  时间格式
- *
- *  debug
- *      CloseUtils
- *      CrashUtils
- *      EmptyUtils
- *      LogUtils
- *      ToastUtils
- *
- *  device:
- *      *CameraUtils
- *      ClipboardUtils  粘贴板
- *      DeviceUtils
- *      KeyboardUtils   软键盘
- *      LocationUtils
- *      PhoneUtils
- *      ScreenUtils
- *      *VibrationUtils
- *
- *  file
- *     CleanUtils   清除内存缓存
- *     FileUtils
- *     SDCardUtils
- *     ZipUtils
+ * <pre>
+ *     author:
+ *                                      ___           ___           ___         ___
+ *         _____                       /  /\         /__/\         /__/|       /  /\
+ *        /  /::\                     /  /::\        \  \:\       |  |:|      /  /:/
+ *       /  /:/\:\    ___     ___    /  /:/\:\        \  \:\      |  |:|     /__/::\
+ *      /  /:/~/::\  /__/\   /  /\  /  /:/~/::\   _____\__\:\   __|  |:|     \__\/\:\
+ *     /__/:/ /:/\:| \  \:\ /  /:/ /__/:/ /:/\:\ /__/::::::::\ /__/\_|:|____    \  \:\
+ *     \  \:\/:/~/:/  \  \:\  /:/  \  \:\/:/__\/ \  \:\~~\~~\/ \  \:\/:::::/     \__\:\
+ *      \  \::/ /:/    \  \:\/:/    \  \::/       \  \:\  ~~~   \  \::/~~~~      /  /:/
+ *       \  \:\/:/      \  \::/      \  \:\        \  \:\        \  \:\         /__/:/
+ *        \  \::/        \__\/        \  \:\        \  \:\        \  \:\        \__\/
+ *         \__\/                       \__\/         \__\/         \__\/
+ *     blog  : http://blankj.com
+ *     time  : 16/12/08
+ *     desc  : utils about initialization
+ * </pre>
  */
-public class Utils {
+public final class Utils {
 
-    private static Context context;
+    @SuppressLint("StaticFieldLeak")
+    private static Application sApp;
 
     private Utils() {
         throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
     /**
-     * 初始化工具类
+     * Init utils.
+     * <p>Init it in the class of UtilsFileProvider.</p>
      *
-     * @param context 上下文
+     * @param app application
      */
-    public static void init(Context context) {
-        Utils.context = context.getApplicationContext();
+    public static void init(final Application app) {
+        if (app == null) {
+            Log.e("Utils", "app is null.");
+            return;
+        }
+        if (sApp == null) {
+            sApp = app;
+            UtilsBridge.init(sApp);
+            UtilsBridge.preLoad();
+            return;
+        }
+        if (sApp.equals(app)) return;
+        UtilsBridge.unInit(sApp);
+        sApp = app;
+        UtilsBridge.init(sApp);
     }
 
     /**
-     * 获取ApplicationContext
+     * Return the Application object.
+     * <p>Main process get app by UtilsFileProvider,
+     * and other process get app by reflect.</p>
      *
-     * @return ApplicationContext
+     * @return the Application object
      */
-    public static Context getContext() {
-        if (context != null) return context;
-        throw new NullPointerException("u should init first");
+    public static Application getApp() {
+        if (sApp != null) return sApp;
+        init(UtilsBridge.getApplicationByReflect());
+        if (sApp == null) throw new NullPointerException("reflect failed.");
+        Log.i("Utils", UtilsBridge.getCurrentProcessName() + " reflect app success.");
+        return sApp;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // interface
+    ///////////////////////////////////////////////////////////////////////////
+
+    public abstract static class Task<Result> extends ThreadUtils.SimpleTask<Result> {
+
+        private Consumer<Result> mConsumer;
+
+        public Task(final Consumer<Result> consumer) {
+            mConsumer = consumer;
+        }
+
+        @Override
+        public void onSuccess(Result result) {
+            if (mConsumer != null) {
+                mConsumer.accept(result);
+            }
+        }
+    }
+
+    public interface OnAppStatusChangedListener {
+        void onForeground(Activity activity);
+
+        void onBackground(Activity activity);
+    }
+
+    public static class ActivityLifecycleCallbacks {
+
+        public void onActivityCreated(@NonNull Activity activity) {/**/}
+
+        public void onActivityStarted(@NonNull Activity activity) {/**/}
+
+        public void onActivityResumed(@NonNull Activity activity) {/**/}
+
+        public void onActivityPaused(@NonNull Activity activity) {/**/}
+
+        public void onActivityStopped(@NonNull Activity activity) {/**/}
+
+        public void onActivityDestroyed(@NonNull Activity activity) {/**/}
+
+        public void onLifecycleChanged(@NonNull Activity activity, Lifecycle.Event event) {/**/}
+    }
+
+    public interface Consumer<T> {
+        void accept(T t);
+    }
+
+    public interface Supplier<T> {
+        T get();
+    }
+
+    public interface Func1<Ret, Par> {
+        Ret call(Par param);
+    }
 }

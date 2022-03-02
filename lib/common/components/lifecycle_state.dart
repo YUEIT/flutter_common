@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_boost/page_visibility.dart';
+import 'package:flutter_boost/flutter_boost.dart';
 import 'package:flutter_common/common/components/system_ui_chrome.dart';
 import 'package:flutter_common/common/components/vm/base_view_model.dart';
 import 'package:flutter_common/common/router/navigation/platform_navigator.dart';
@@ -38,7 +38,7 @@ abstract class LifecycleState<T extends StatefulWidget> extends State<T> with Pa
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    PageVisibilityBinding.instance.addObserver(this, ModalRoute.of(context));
+    PageVisibilityBinding.instance.addObserver(this, ModalRoute.of(context)!);
   }
 
   @override

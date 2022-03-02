@@ -7,29 +7,35 @@ import java.util.List;
  * Created by yue on 2018/7/11.
  */
 
-public class BaseListBean<T> extends BaseUnityListBean<T> {
+public class BaseListBean<T> extends BaseUnityListBean<T> implements IListModel<T> {
 
+    @Override
     public List<T> getList() {
         return super.getRealList();
     }
 
     //并不一定返回
+    @Override
     public int getTotal() {
         return super.getRealTotal();
     }
 
+    @Override
     public int getPageNo() {
         return super.getRealPageNo();
     }
 
+    @Override
     public int getPageSize() {
         return super.getRealPageSize();
     }
 
+    @Override
     public String getPageNt() {
-        return super.getNt();
+        return super.getRealPageNt();
     }
 
+    @Override
     public int getCurrentPageTotal() {
         return getList()==null?0:getList().size();
     }
