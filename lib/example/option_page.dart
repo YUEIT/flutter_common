@@ -5,11 +5,12 @@ import 'package:flutter_common/common/components/lifecycle_state.dart';
 import 'package:flutter_common/common/components/provider/dialog_provider.dart';
 import 'package:flutter_common/common/components/top_banner.dart';
 import 'package:flutter_common/common/components/vm/live_data.dart';
-import 'package:flutter_common/common/router/route.dart';
+import 'package:flutter_common/common/router/router.dart';
 import 'package:flutter_common/common/widget/common_dialog.dart';
 import 'package:flutter_common/common/widget/global_dialog.dart';
 import 'package:flutter_common/example/base/example_router_path.dart';
 import 'package:flutter_common/example/vm/option_view_model.dart';
+import 'package:flutter_common/common/utils/map_extension.dart';
 
 @ARoute(url: ExampleRouterPath.OPTION_PAGE)
 class OptionPage extends StatefulWidget {
@@ -31,6 +32,8 @@ class _OptionPage extends ViewModelState<OptionPage, OptionViewModel> {
   @override
   void initState() {
     super.initState();
+    Map map = {"key": "value"};
+    print("${map["key"]}");
   }
 
   @override

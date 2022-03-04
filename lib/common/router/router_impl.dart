@@ -1,8 +1,8 @@
 
 import 'dart:convert';
 
-import 'route.dart';
-import 'router.route.internal.dart';
+import 'router.dart';
+import 'app_router.internal.dart';
 
 abstract class ARouterInternal {
   bool hasPageConfig(ARouteOption option);

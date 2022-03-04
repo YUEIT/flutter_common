@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_common/common/components/lifecycle_state.dart';
 import 'package:flutter_common/common/components/top_banner.dart';
 import 'package:flutter_common/common/components/vm/live_data.dart';
-import 'package:flutter_common/common/router/route.dart';
+import 'package:flutter_common/common/router/router.dart';
 import 'package:flutter_common/example/base/example_router_path.dart';
 import 'package:flutter_common/example/vm/net_view_model.dart';
 

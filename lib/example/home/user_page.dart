@@ -61,7 +61,6 @@ class _UserPageState extends LifecycleState<UserPage> {
                   color: Colors.black26,
                   borderRadius: BorderRadius.all(Radius.circular(5))
               ),
-              child: Image.network("src"),
             ),
             Expanded(
                 child: Column(

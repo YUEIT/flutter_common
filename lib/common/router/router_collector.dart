@@ -6,9 +6,10 @@ import 'package:source_gen/source_gen.dart';
 import 'package:analyzer/dart/constant/value.dart';
 
 class Collector {
+
   Collector();
-  Map<String, List<Map<String, dynamic>>> routerMap =
-      <String, List<Map<String, dynamic>>>{};
+
+  Map<String, List<Map<String, dynamic>>> routerMap = <String, List<Map<String, dynamic>>>{};
   List<String> importList = <String>[];
 
   Map<String, DartObject> toStringDartObjectMap(
@@ -24,8 +25,7 @@ class Collector {
     });
   }
 
-  void collect(
-      ClassElement element, ConstantReader annotation, BuildStep buildStep) {
+  void collect(ClassElement element, ConstantReader annotation, BuildStep buildStep) {
     final String className = element.name;
     final String? url = annotation.peek('url')?.stringValue;
     if (url != null) {
@@ -41,10 +41,9 @@ class Collector {
     }
 
     if (buildStep.inputId.path.contains('lib/')) {
-      importClazz(
-          "package:${buildStep.inputId.package}/${buildStep.inputId.path.replaceFirst('lib/', '')}");
+      importList.add("package:${buildStep.inputId.package}/${buildStep.inputId.path.replaceFirst('lib/', '')}");
     } else {
-      importClazz("${buildStep.inputId.path}");
+      importList.add("${buildStep.inputId.path}");
     }
   }
 
@@ -54,7 +53,7 @@ class Collector {
       final Map<String, dynamic>? map =
           genPageConfigFromConstantReader(reader, className);
       if (map != null) {
-        addEntry("'${url}'", map);
+        addEntry("'$url'", map);
       }
     }
   }
@@ -71,7 +70,7 @@ class Collector {
   }
 
   String wK(String key) {
-    return "'${key}'";
+    return "'$key'";
   }
 
   void addEntry(String key, Map<String, dynamic> value) {
@@ -83,7 +82,4 @@ class Collector {
     list.add(value);
   }
 
-  void importClazz(String path) {
-    importList.add(path);
-  }
 }

@@ -5,8 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_common/common/components/provider/dialog_provider.dart';
 import 'package:flutter_common/common/constant/debug.dart';
 import 'package:flutter_common/common/net/http.dart';
-import 'package:flutter_common/common/router/router.route.dart';
-import 'package:flutter_common/common/router/router.route.internal.dart';
+import 'package:flutter_common/common/router/app_router.dart';
+import 'package:flutter_common/common/router/app_router.internal.dart';
 import 'package:flutter_common/example/mode/share_provider.dart';
 import 'package:flutter_common/common/utils/dimens_extension.dart';
 import 'package:provider/provider.dart';
@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
             pageBuilder: (_, __, ___) {
               return TransitionBuilderWidget(
                 builder: (context) {
-                  return AppRoute.getPage(key, settings.arguments, uniqueId);
+                  return AppRouter.getPage(key, settings.arguments, uniqueId);
                 },
               );
             });

@@ -119,9 +119,6 @@ class _HomePageState extends LifecycleState<HomePage> {
                 decoration: BoxDecoration(
                     color: Colors.black26
                 ),
-                child: Image.network(
-                  menu.image ?? "",
-                ),
               ),
             ),
             Container(
@@ -154,9 +151,6 @@ class _HomePageState extends LifecycleState<HomePage> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                         color: Colors.black26
-                    ),
-                    child: Image.network(
-                      goods.image ?? "",
                     ),
                   ),
                 ),

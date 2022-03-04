@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply from: rootProject.getRootDir().getAbsolutePath() + "/flutter.gradle"
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion rootProject.ext.android.targetSdkVersion
@@ -12,10 +13,11 @@ android {
         versionName rootProject.ext.version.versionName.toString()
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments = [ AROUTER_MODULE_NAME  : project.getName() ]
+        kapt {
+            arguments {
+                arg("AROUTER_MODULE_NAME", project.getName())
             }
+            generateStubs = true
         }
     }
     buildTypes {
@@ -72,6 +74,6 @@ dependencies {
 
     //aRouter
     implementation rootProject.ext.dependencies["arouter-api"]
-    annotationProcessor rootProject.ext.dependencies["arouter-compiler"]
+    kapt rootProject.ext.dependencies["arouter-compiler"]
 }
 

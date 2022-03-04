@@ -1,11 +1,11 @@
 
 import 'package:flutter/widgets.dart';
 
-import 'route.dart';
+import 'router.dart';
 import 'router_impl.dart';
 
 @ARouteRoot()
-class AppRoute {
+class AppRouter {
 
   static Widget getPage(String urlString, dynamic params, String? uniqueId) {
     print("$urlString");

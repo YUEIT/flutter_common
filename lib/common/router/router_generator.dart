@@ -2,13 +2,13 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:build/build.dart';
 
-import 'collector.dart';
-import 'route.dart';
-import 'writer.dart';
+import 'router_collector.dart';
+import 'router.dart';
+import 'router_writer.dart';
 
-class RouteWriterGenerator extends GeneratorForAnnotation<ARouteRoot> {
+class RouterWriterGenerator extends GeneratorForAnnotation<ARouteRoot> {
   Collector collector() {
-    return RouteGenerator.collector;
+    return RouterGenerator.collector;
   }
 
   @override
@@ -18,7 +18,7 @@ class RouteWriterGenerator extends GeneratorForAnnotation<ARouteRoot> {
   }
 }
 
-class RouteGenerator extends GeneratorForAnnotation<ARoute> {
+class RouterGenerator extends GeneratorForAnnotation<ARoute> {
   static Collector collector = Collector();
 
   @override

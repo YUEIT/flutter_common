@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter_common/common/utils/map_extension.dart';
+
 class HomeMode {
     List<HomeData>? homeData;
 
@@ -7,7 +9,7 @@ class HomeMode {
 
     factory HomeMode.fromJson(Map<String, dynamic> json) {
         return HomeMode(
-            homeData: json['homeData'] != null ? (json['homeData'] as List).map((i) => HomeData.fromJson(i)).toList() : null,
+            homeData: json.get('homeData', convert: (it) { return (it as List).map((i) => HomeData.fromJson(i)).toList();}),
         );
     }
 
@@ -32,12 +34,12 @@ class HomeData {
 
     factory HomeData.fromJson(Map<String, dynamic> json) {
         return HomeData(
-            banner: json['banner'] != null ? (json['banner'] as List).map((i) => Banner.fromJson(i)).toList() : null,
-            goods: json['goods'] != null ? (json['goods'] as List).map((i) => Good.fromJson(i)).toList() : null,
-            id: json['id'],
-            menu: json['menu'] != null ? (json['menu'] as List).map((i) => Menu.fromJson(i)).toList() : null,
-            title: json['title'],
-            type: json['type'],
+            banner: json.get('banner', convert: (it) { return (it as List).map((i) => Banner.fromJson(i)).toList(); }),
+            goods: json.get('goods', convert: (it) { return (it as List).map((i) => Good.fromJson(i)).toList(); }),
+            id: json.get('id'),
+            menu: json.get('menu', convert: (it) { return (it as List).map((i) => Menu.fromJson(i)).toList(); }),
+            title: json.get('title'),
+            type: json.get('type'),
         );
     }
 
@@ -69,10 +71,10 @@ class Banner {
 
     factory Banner.fromJson(Map<String, dynamic> json) {
         return Banner(
-            height: json['height'],
-            image: json['image'],
-            title: json['title'],
-            width: json['width'],
+            height: json.get('height'),
+            image: json.get('image'),
+            title: json.get('title'),
+            width: json.get('width'),
         );
     }
 
@@ -98,12 +100,12 @@ class Good {
 
     factory Good.fromJson(Map<String, dynamic> json) {
         return Good(
-            des: json['des'],
-            id: json['id'],
-            image: json['image'],
-            name: json['name'],
-            price: json['price'],
-            stock: json['stock'],
+            des: json.get('des'),
+            id: json.get('id'),
+            image: json.get('image'),
+            name: json.get('name'),
+            price: json.get('price'),
+            stock: json.get('stock'),
         );
     }
 
@@ -129,10 +131,10 @@ class Menu {
 
     factory Menu.fromJson(Map<String, dynamic> json) {
         return Menu(
-            height: json['height'],
-            image: json['image'],
-            title: json['title'],
-            width: json['width'],
+            height: json.get('height'),
+            image: json.get('image'),
+            title: json.get('title'),
+            width: json.get('width'),
         );
     }
 

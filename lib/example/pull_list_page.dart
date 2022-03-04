@@ -5,7 +5,7 @@ import 'package:flutter_common/common/components/lifecycle_state.dart';
 import 'package:flutter_common/common/components/normal_widget.dart';
 import 'package:flutter_common/common/components/top_banner.dart';
 import 'package:flutter_common/common/router/navigation/platform_navigator.dart';
-import 'package:flutter_common/common/router/route.dart';
+import 'package:flutter_common/common/router/router.dart';
 import 'package:flutter_common/example/base/example_router_path.dart';
 import 'package:flutter_common/example/vm/pull_list_view_model.dart';
 import 'mode/pull_list_mode.dart';
