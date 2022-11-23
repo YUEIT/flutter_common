@@ -1,6 +1,6 @@
 apply from : 'config.gradle'
 
-include ':app', ':common', ':middle' ,':module_flutter'
+include ':app',':module_flutter'
 
 if (ext.flutter.enable) {
     def localPropertiesFile = new File(rootProject.projectDir, "local.properties")

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_common/common/components/lifecycle_state.dart';
 import 'package:flutter_common/common/components/top_banner.dart';

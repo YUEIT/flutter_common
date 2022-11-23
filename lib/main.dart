@@ -137,11 +137,10 @@ class HomeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ///设计稿尺寸，单位应是pt或dp
-    ScreenUtil.init(BoxConstraints(
-      maxWidth: MediaQuery.of(context).size.width,
-      maxHeight: MediaQuery.of(context).size.height,),
-      context: context,
-      designSize: Size(DimensExtension.screenWidth, DimensExtension.screenHeight),
+    ScreenUtil.init(context,
+        designSize: Size(DimensExtension.screenWidth, DimensExtension.screenHeight),
+        splitScreenMode: true,
+        minTextAdapt: true
     );
     return Container(
       child: child,

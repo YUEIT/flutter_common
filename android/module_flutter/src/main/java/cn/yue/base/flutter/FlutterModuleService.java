@@ -8,14 +8,15 @@ import com.idlefish.flutterboost.FlutterBoostRouteOptions;
 import com.tekartik.sqflite.SqflitePlugin;
 import java.util.HashMap;
 import java.util.Map;
+
+import cn.yue.base.flutter.module.IFlutterModule;
 import cn.yue.base.flutter.plugin.CustomPlugin;
 import cn.yue.base.flutter.plugin.LogPlugin;
 import cn.yue.base.flutter.plugin.NetConnectPlugin;
 import cn.yue.base.flutter.plugin.SharedPreferencesPlugin;
 import cn.yue.base.flutter.plugin.ToastPlugin;
-import cn.yue.base.middle.router.INavigation;
-import cn.yue.base.middle.router.PlatformRouter;
-import cn.yue.base.middle.module.IFlutterModule;
+import cn.yue.base.flutter.router.INavigation;
+import cn.yue.base.flutter.router.PlatformRouter;
 import io.flutter.embedding.engine.plugins.PluginRegistry;
 import io.flutter.plugins.pathprovider.PathProviderPlugin;
 

@@ -2,7 +2,7 @@ package cn.yue.base.flutter.plugin;
 
 import androidx.annotation.NonNull;
 
-import cn.yue.base.common.utils.view.ToastUtils;
+import cn.yue.base.flutter.utils.ToastUtils;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;

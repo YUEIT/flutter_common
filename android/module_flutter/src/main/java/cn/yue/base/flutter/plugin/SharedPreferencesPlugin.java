@@ -3,7 +3,6 @@ package cn.yue.base.flutter.plugin;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import cn.yue.base.common.utils.code.SPUtils;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -49,25 +48,25 @@ public class SharedPreferencesPlugin implements FlutterPlugin, MethodChannel.Met
         if (name == null) name = "";
         switch (call.method) {
             case "putInt":
-                SPUtils.getInstance(name).put(key, (int)value);
-                result.success(true);
+//                SPUtils.getInstance(name).put(key, (int)value);
+//                result.success(true);
                 break;
             case "putString" :
-                SPUtils.getInstance(name).put(key, (String)value);
+//                SPUtils.getInstance(name).put(key, (String)value);
                 result.success(true);
                 break;
             case "putBoolean" :
-                SPUtils.getInstance(name).put(key, (boolean)value);
+//                SPUtils.getInstance(name).put(key, (boolean)value);
                 result.success(true);
                 break;
             case "getString" :
-                result.success(SPUtils.getInstance(name).getString(key));
+//                result.success(SPUtils.getInstance(name).getString(key));
                 break;
             case "getInt" :
-                result.success(SPUtils.getInstance(name).getInt(key));
+//                result.success(SPUtils.getInstance(name).getInt(key));
                 break;
             case "getBoolean" :
-                result.success(SPUtils.getInstance(name).getBoolean(key));
+//                result.success(SPUtils.getInstance(name).getBoolean(key));
                 break;
             default:
                 result.notImplemented();

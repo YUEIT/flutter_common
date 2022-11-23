@@ -1,8 +1,6 @@
 # flutter 工程结构
 
-    flutter 2.8.1版本 support null safety
-
-    flutter_boost暂时不支持2.8+版本，额外适配方案https://github.com/alibaba/flutter_boost/issues/1451#issuecomment-998752299
+    flutter 3.3.0版本 support null safety
 
 ##### flutter 模式下
 

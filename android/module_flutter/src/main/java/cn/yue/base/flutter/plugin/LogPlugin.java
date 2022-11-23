@@ -5,8 +5,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import cn.yue.base.common.utils.debug.LogUtils;
-import cn.yue.base.middle.init.InitConstant;
+import cn.yue.base.flutter.utils.LogUtils;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;

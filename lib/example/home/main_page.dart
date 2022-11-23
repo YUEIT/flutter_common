@@ -76,13 +76,7 @@ class _MainPageState extends LifecycleState<MainPage> {
           size: 25,
           color: Colors.red,
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-              color: Colors.black12,
-              fontSize: 12
-          ),
-        )
+        label: title,
     );
   }
 

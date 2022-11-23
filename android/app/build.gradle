@@ -58,9 +58,6 @@ def appVersionCode(String appVersionName) {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    testImplementation rootProject.ext.androidx["junit"]
-    androidTestImplementation rootProject.ext.androidx["junit-test"]
-    androidTestImplementation rootProject.ext.androidx["espresso-test"]
 
     implementation rootProject.ext.androidx["appcompat"]
     implementation rootProject.ext.androidx["constraintlayout"]
@@ -69,7 +66,6 @@ dependencies {
     implementation rootProject.ext.kotlin["coroutine"]
     implementation rootProject.ext.kotlin["coroutine-android"]
 
-    api project(':middle')
     api project(':module_flutter')
 
     //aRouter

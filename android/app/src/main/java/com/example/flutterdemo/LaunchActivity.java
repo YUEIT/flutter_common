@@ -1,6 +1,5 @@
 package com.example.flutterdemo;
 
-import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,16 +8,14 @@ import android.os.Looper;
 import android.view.Window;
 import android.view.WindowManager;
 
-import cn.yue.base.common.activity.BaseActivity;
-import cn.yue.base.common.activity.PermissionCallBack;
-import cn.yue.base.middle.router.FRouter;
+import cn.yue.base.flutter.activity.CommonActivity;
+
 
 /**
  * Description :
  * Created by yue on 2019/3/21
  */
-public class LaunchActivity extends BaseActivity {
-
+public class LaunchActivity extends CommonActivity {
 
     private void onSystemBarShow() {
         Window window = getWindow();
@@ -57,11 +54,6 @@ public class LaunchActivity extends BaseActivity {
         toStart();
     }
 
-    @Override
-    protected boolean hasContentView() {
-        return false;
-    }
-
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private void toStart() {
         mHandler.postDelayed(new Runnable() {
@@ -72,17 +64,6 @@ public class LaunchActivity extends BaseActivity {
                 finish();
             }
         },500);
-
-    }
-
-
-    @Override
-    protected int getLayoutId() {
-        return 0;
-    }
-
-    @Override
-    protected void initView() {
 
     }
 }

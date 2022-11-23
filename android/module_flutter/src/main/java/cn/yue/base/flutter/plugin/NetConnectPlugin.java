@@ -2,8 +2,7 @@ package cn.yue.base.flutter.plugin;
 
 import androidx.annotation.NonNull;
 
-import cn.yue.base.common.utils.Utils;
-import cn.yue.base.common.utils.device.NetworkUtils;
+import cn.yue.base.flutter.utils.NetworkUtils;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;

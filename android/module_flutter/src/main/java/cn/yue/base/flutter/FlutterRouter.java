@@ -6,8 +6,9 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import com.idlefish.flutterboost.containers.FlutterBoostActivity;
 import java.util.HashMap;
-import cn.yue.base.middle.router.INavigation;
-import cn.yue.base.middle.router.RouterCard;
+
+import cn.yue.base.flutter.router.INavigation;
+import cn.yue.base.flutter.router.RouterCard;
 import io.flutter.embedding.android.FlutterActivityLaunchConfigs;
 
 public class FlutterRouter implements INavigation {

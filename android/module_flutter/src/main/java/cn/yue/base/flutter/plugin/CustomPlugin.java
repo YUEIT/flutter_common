@@ -4,9 +4,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import cn.yue.base.common.Constant;
-import cn.yue.base.common.utils.debug.LogUtils;
-import cn.yue.base.middle.init.InitConstant;
+import cn.yue.base.flutter.utils.LogUtils;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -57,7 +55,7 @@ public class CustomPlugin implements FlutterPlugin, MethodChannel.MethodCallHand
     }
 
     private String getDevicesId() {
-        return InitConstant.getDeviceId();
+        return "";
     }
 
     private void log(String msg) {
